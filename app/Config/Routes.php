@@ -68,3 +68,12 @@ $routes->post('trips/create',         'Trips::create');
 $routes->post('trips/update',         'Trips::update');
 $routes->post('trips/delete',         'Trips::delete');
 $routes->get('trips/compute_billing', 'Trips::compute_billing');
+
+// USERS
+$routes->get('users/index',   'Users::index');
+$routes->post('users/create', 'Users::create');
+$routes->post('users/update', 'Users::update');
+$routes->post('users/delete', 'Users::delete');
+
+// TRAIL
+$routes->get('trail/index', 'Trail::index');

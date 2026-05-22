@@ -34,4 +34,17 @@ class User extends Model
         $result = $query ? $query->getResultArray() : [];
         return $result ? $result[0] : false;
     }
+
+    public function get_all()
+    {
+        $database = \Config\Database::connect();
+        $sql = <<<EOT
+SELECT id, first_name, last_name, email, role, added_on, is_deleted
+FROM user
+WHERE is_deleted = 0
+ORDER BY last_name ASC, first_name ASC
+EOT;
+        $query = $database->query($sql);
+        return $query ? $query->getResultArray() : false;
+    }
 }

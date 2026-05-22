@@ -10,8 +10,9 @@ class Contract_routes extends MYTController
 
     public function __construct()
     {
-        $this->api_key  = $_SERVER['HTTP_API_KEY'];
-        $this->user_key = $_SERVER['HTTP_USER_KEY'];
+        $this->api_key      = $_SERVER['HTTP_API_KEY']  ?? '';
+        $this->user_key     = $_SERVER['HTTP_USER_KEY'] ?? '';
+        $this->requested_by = $this->user_key;
         $this->_load_essentials();
     }
 
@@ -26,8 +27,11 @@ class Contract_routes extends MYTController
 
         $contract_id = $this->request->getVar('contract_id');
 
-        if (!$routes = $this->contractRouteModel->get_by_contract_id($contract_id)) {
-            $response = $this->failNotFound('No routes found for this contract.');
+        $routes = $contract_id
+            ? $this->contractRouteModel->get_by_contract_id($contract_id)
+            : $this->contractRouteModel->get_all();
+        if ($routes === false) {
+            $response = $this->failNotFound('No routes found.');
         } else {
             $response = $this->respond(['data' => $routes, 'status' => 'success']);
         }
@@ -54,11 +58,13 @@ class Contract_routes extends MYTController
         }
 
         $data = [
-            'contract_id' => $contract_id,
-            'origin'      => $this->request->getVar('origin'),
-            'destination' => $this->request->getVar('destination'),
-            'added_by'    => $this->requested_by,
-            'added_on'    => date('Y-m-d H:i:s')
+            'contract_id'  => $this->request->getVar('contract_id'),
+            'origin'       => $this->request->getVar('origin'),
+            'destination'  => $this->request->getVar('destination'),
+            'distance_km'  => $this->request->getVar('distance_km')  ?: null,
+            'remarks'      => $this->request->getVar('remarks')      ?: null,
+            'added_by'     => $this->requested_by,
+            'added_on'     => date('Y-m-d H:i:s'),
         ];
 
         $this->db = db_connect();
@@ -95,10 +101,12 @@ class Contract_routes extends MYTController
         }
 
         $data = [
-            'origin'      => $this->request->getVar('origin'),
-            'destination' => $this->request->getVar('destination'),
-            'updated_by'  => $this->requested_by,
-            'updated_on'  => date('Y-m-d H:i:s')
+            'origin'       => $this->request->getVar('origin'),
+            'destination'  => $this->request->getVar('destination'),
+            'distance_km'  => $this->request->getVar('distance_km')  ?: null,
+            'remarks'      => $this->request->getVar('remarks')      ?: null,
+            'updated_by'   => $this->requested_by,
+            'updated_on'   => date('Y-m-d H:i:s'),
         ];
 
         $this->db = db_connect();

@@ -10,6 +10,8 @@ class Contract_route extends MYTModel
         'contract_id',
         'origin',
         'destination',
+        'distance_km',
+        'remarks',
         'added_by',
         'added_on',
         'updated_by',
@@ -47,5 +49,18 @@ WHERE contract_route.id = ?
 EOT;
         $query = $database->query($sql, [$route_id]);
         return $query ? $query->getRowArray() : false;
+    }
+
+    public function get_all()
+    {
+        $database = \Config\Database::connect();
+        $sql = <<<EOT
+SELECT *
+FROM contract_route
+WHERE contract_route.is_deleted = 0
+ORDER BY contract_route.id ASC
+EOT;
+        $query = $database->query($sql);
+        return $query ? $query->getResultArray() : false;
     }
 }
