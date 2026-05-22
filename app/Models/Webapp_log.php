@@ -4,6 +4,9 @@ namespace App\Models;
 
 class Webapp_log extends MYTModel
 {
+    public $table               = 'webapp_log';
+    public $useTimestamps       = false;
+    public $dateFormat          = 'datetime';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $allowedFields    = [
@@ -14,11 +17,6 @@ class Webapp_log extends MYTModel
         'requested_by',
         'requested_on',
     ];
-
-    public function __construct()
-    {
-        $this->table = 'webapp_log';
-    }
 
     public function get_all($controller = null, $search = null)
     {
