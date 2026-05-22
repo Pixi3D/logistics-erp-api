@@ -12,7 +12,7 @@ class Login extends MYTController
 
     public function __construct()
     {
-        $this->api_key = $_SERVER['HTTP_API_KEY'];
+        $this->api_key = $_SERVER['HTTP_API_KEY'] ?? '';
         $this->userModel = new User();
         $this->webappResponseModel = new Webapp_response();
     }

@@ -9,8 +9,9 @@ class Helpers extends MYTController
 
     public function __construct()
     {
-        $this->api_key  = $_SERVER['HTTP_API_KEY'];
-        $this->user_key = $_SERVER['HTTP_USER_KEY'];
+        $this->api_key      = $_SERVER['HTTP_API_KEY']  ?? '';
+        $this->user_key     = $_SERVER['HTTP_USER_KEY'] ?? '';
+        $this->requested_by = $this->user_key;
         $this->_load_essentials();
     }
 
@@ -110,7 +111,7 @@ class Helpers extends MYTController
         return $response;
     }
 
-    public function update()
+    public function update($id = null)
     {
         if (($response = $this->_api_verification('helpers', 'update')) !== true)
             return $response;
@@ -153,7 +154,7 @@ class Helpers extends MYTController
         return $response;
     }
 
-    public function delete()
+    public function delete($id = null)
     {
         if (($response = $this->_api_verification('helpers', 'delete')) !== true)
             return $response;

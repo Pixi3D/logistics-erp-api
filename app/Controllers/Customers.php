@@ -110,7 +110,7 @@ class Customers extends MYTController
         return $response;
     }
 
-    public function update()
+    public function update($id = null)
     {
         if (($response = $this->_api_verification('customers', 'update')) !== true)
             return $response;
@@ -153,7 +153,7 @@ class Customers extends MYTController
         return $response;
     }
 
-    public function delete()
+    public function delete($id = null)
     {
         if (($response = $this->_api_verification('customers', 'delete')) !== true)
             return $response;

@@ -145,7 +145,7 @@ class Contracts extends MYTController
         return $response;
     }
 
-    public function update()
+    public function update($id = null)
     {
         if (($response = $this->_api_verification('contracts', 'update')) !== true)
             return $response;
@@ -191,7 +191,7 @@ class Contracts extends MYTController
         return $response;
     }
 
-    public function delete()
+    public function delete($id = null)
     {
         if (($response = $this->_api_verification('contracts', 'delete')) !== true)
             return $response;

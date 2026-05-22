@@ -76,7 +76,7 @@ class Contract_routes extends MYTController
         return $response;
     }
 
-    public function update()
+    public function update($id = null)
     {
         if (($response = $this->_api_verification('contract_routes', 'update')) !== true)
             return $response;
@@ -116,7 +116,7 @@ class Contract_routes extends MYTController
         return $response;
     }
 
-    public function delete()
+    public function delete($id = null)
     {
         if (($response = $this->_api_verification('contract_routes', 'delete')) !== true)
             return $response;
