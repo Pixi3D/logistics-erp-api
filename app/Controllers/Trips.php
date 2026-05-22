@@ -198,7 +198,7 @@ class Trips extends MYTController
         return $response;
     }
 
-    public function update()
+    public function update($id = null)
     {
         if (($response = $this->_api_verification('trips', 'update')) !== true)
             return $response;
@@ -240,7 +240,7 @@ class Trips extends MYTController
         return $response;
     }
 
-    public function delete()
+    public function delete($id = null)
     {
         if (($response = $this->_api_verification('trips', 'delete')) !== true)
             return $response;

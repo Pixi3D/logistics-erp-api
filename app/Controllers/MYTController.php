@@ -14,6 +14,7 @@ class MYTController extends ResourceController
 
     protected $helpers      = ['form', 'url', 'text'];
     protected $api_key;
+    protected $user_key;
     protected $validation;
     protected $webapp_log_id;
     protected $requested_by;
@@ -94,7 +95,7 @@ class MYTController extends ResourceController
 
         if (!$requester) {
             $response = $this->failUnauthorized('Token Expired');
-            $webappResponseModel->record_response($this->webapp_log_id, $response);
+            $webappResponseModel->record_response($this->webapp_log_id, $response); 
             return $response;
         }
 

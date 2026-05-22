@@ -15,6 +15,8 @@ class User extends Model
         'email',
         'password',
         'role',
+        'token',    
+        'token_expiry', 
         'added_by',
         'added_on',
         'updated_by',

@@ -2,18 +2,18 @@
 
 namespace App\Models;
 
-class Driver extends MYTModel
+class Truck extends MYTModel
 {
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $allowedFields    = [
-        'first_name',
-        'last_name',
-        'contact_number',
-        'license_number',
-        'license_expiry',
-        'address',
+        'unit_code',
+        'plate_number',
+        'color',
+        'capacity',
+        'km_per_liter',
         'status',
+        'remarks',
         'added_by',
         'added_on',
         'updated_by',
@@ -23,7 +23,7 @@ class Driver extends MYTModel
 
     public function __construct()
     {
-        $this->table = 'driver';
+        $this->table = 'truck';
     }
 
     public function get_all()
@@ -31,53 +31,53 @@ class Driver extends MYTModel
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT *
-FROM driver
-WHERE driver.is_deleted = 0
-ORDER BY driver.last_name ASC, driver.first_name ASC
+FROM truck
+WHERE truck.is_deleted = 0
+ORDER BY truck.unit_code ASC
 EOT;
         $query = $database->query($sql);
         return $query ? $query->getResultArray() : false;
     }
 
-    public function get_details_by_id($driver_id)
+    public function get_details_by_id($truck_id)
     {
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT *
-FROM driver
-WHERE driver.id = ?
-  AND driver.is_deleted = 0
+FROM truck
+WHERE truck.id = ?
+  AND truck.is_deleted = 0
 EOT;
-        $query = $database->query($sql, [$driver_id]);
+        $query = $database->query($sql, [$truck_id]);
         return $query ? $query->getRowArray() : false;
     }
 
-    public function search($name = null, $license_number = null, $status = null)
+    public function search($unit_code = null, $plate_number = null, $status = null)
     {
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT *
-FROM driver
-WHERE driver.is_deleted = 0
+FROM truck
+WHERE truck.is_deleted = 0
 EOT;
         $binds = [];
 
-        if ($name) {
-            $sql    .= " AND CONCAT(driver.first_name, ' ', driver.last_name) LIKE ?";
-            $binds[] = '%' . $name . '%';
+        if ($unit_code) {
+            $sql    .= " AND truck.unit_code LIKE ?";
+            $binds[] = '%' . $unit_code . '%';
         }
 
-        if ($license_number) {
-            $sql    .= " AND driver.license_number LIKE ?";
-            $binds[] = '%' . $license_number . '%';
+        if ($plate_number) {
+            $sql    .= " AND truck.plate_number LIKE ?";
+            $binds[] = '%' . $plate_number . '%';
         }
 
         if ($status) {
-            $sql    .= " AND driver.status = ?";
+            $sql    .= " AND truck.status = ?";
             $binds[] = $status;
         }
 
-        $sql .= " ORDER BY driver.last_name ASC, driver.first_name ASC";
+        $sql .= " ORDER BY truck.unit_code ASC";
 
         $query = $database->query($sql, $binds);
         return $query ? $query->getResultArray() : false;
