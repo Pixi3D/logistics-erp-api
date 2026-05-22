@@ -9,8 +9,9 @@ class Customers extends MYTController
 
     public function __construct()
     {
-        $this->api_key  = $_SERVER['HTTP_API_KEY'];
-        $this->user_key = $_SERVER['HTTP_USER_KEY'];
+        $this->api_key      = $_SERVER['HTTP_API_KEY']  ?? '';
+        $this->user_key     = $_SERVER['HTTP_USER_KEY'] ?? '';
+        $this->requested_by = $this->user_key;
         $this->_load_essentials();
     }
 
