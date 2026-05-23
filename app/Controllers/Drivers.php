@@ -88,15 +88,16 @@ class Drivers extends MYTController
             return $response;
 
         $data = [
-            'first_name'     => $this->request->getVar('first_name'),
-            'last_name'      => $this->request->getVar('last_name'),
-            'contact_number' => $this->request->getVar('contact_number') ?: null,
-            'license_number' => $this->request->getVar('license_number') ?: null,
-            'address'        => $this->request->getVar('address')        ?: null,
-            'status'         => 'active',
-            'added_by'       => $this->requested_by,
-            'added_on'       => date('Y-m-d H:i:s')
-        ];
+        'first_name'     => $this->request->getVar('first_name'),
+        'last_name'      => $this->request->getVar('last_name'),
+        'contact_number' => $this->request->getVar('contact_number') ?: null,
+        'license_number' => $this->request->getVar('license_number') ?: null,
+        'license_expiry' => $this->request->getVar('license_expiry') ?: null,
+        'address'        => $this->request->getVar('address')        ?: null,
+        'status'         => $this->request->getVar('status')         ?: 'active',
+        'added_by'       => $this->requested_by,
+        'added_on'       => date('Y-m-d H:i:s')
+    ];
 
         $this->db = db_connect();
         $this->db->transBegin();
@@ -145,7 +146,7 @@ class Drivers extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->driverModel->update($condition, $data)) {
+        if (!$this->driverModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to update driver. Please try again.');
         } else {
@@ -180,7 +181,7 @@ class Drivers extends MYTController
 
         if (!$this->driverModel->select('', $condition, 1)) {
             $response = $this->failNotFound('Driver not found.');
-        } elseif (!$this->driverModel->update($condition, $data)) {
+        } elseif (!$this->driverModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to delete driver. Please try again.');
         } else {
