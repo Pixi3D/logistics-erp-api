@@ -104,7 +104,7 @@ class Helpers extends MYTController
             $response = $this->fail('Unable to add helper. Please try again.');
         } else {
             $this->db->transCommit();
-            $response = $this->respond(['response' => 'Helper added successfully.']);
+            $response = $this->respond(['status' => 'success', 'response' => 'Helper added successfully.']);
         }
 
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
@@ -147,7 +147,7 @@ class Helpers extends MYTController
             $response = $this->fail('Unable to update helper. Please try again.');
         } else {
             $this->db->transCommit();
-            $response = $this->respond(['response' => 'Helper updated successfully.']);
+            $response = $this->respond(['status' => 'success', 'response' => 'Helper updated successfully.']);
         }
 
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
@@ -182,7 +182,7 @@ class Helpers extends MYTController
             $response = $this->fail('Unable to delete helper. Please try again.');
         } else {
             $this->db->transCommit();
-            $response = $this->respond(['response' => 'Helper deleted successfully.']);
+            $response = $this->respond(['status' => 'success', 'response' => 'Helper deleted successfully.']);
         }
 
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
