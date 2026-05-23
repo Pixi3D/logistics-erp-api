@@ -7,6 +7,12 @@ class MYTModel extends Model
 {
     public $table = NULL;
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->db = \Config\Database::connect();
+    }
+
 	/**
 	 * Parameter database will be passed if there
 	 * is no need to create a database connection

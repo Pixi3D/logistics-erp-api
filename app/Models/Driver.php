@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\MYTModel;
+
 class Driver extends MYTModel
 {
     protected $primaryKey       = 'id';
@@ -22,9 +24,10 @@ class Driver extends MYTModel
     ];
 
     public function __construct()
-    {
-        $this->table = 'driver';
-    }
+{
+    parent::__construct();
+    $this->table = 'driver';
+}
 
     public function get_all()
     {
