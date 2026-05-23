@@ -91,7 +91,6 @@ class Customers extends MYTController
             'contact_person' => $this->request->getVar('contact_person') ?: null,
             'contact_number' => $this->request->getVar('contact_number') ?: null,
             'address'        => $this->request->getVar('address')        ?: null,
-            'status'         => 'active',
             'added_by'       => $this->requested_by,
             'added_on'       => date('Y-m-d H:i:s')
         ];
@@ -134,7 +133,6 @@ class Customers extends MYTController
             'contact_person' => $this->request->getVar('contact_person') ?: null,
             'contact_number' => $this->request->getVar('contact_number') ?: null,
             'address'        => $this->request->getVar('address')        ?: null,
-            'status'         => $this->request->getVar('status'),
             'updated_by'     => $this->requested_by,
             'updated_on'     => date('Y-m-d H:i:s')
         ];
@@ -142,7 +140,7 @@ class Customers extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->customerModel->update($condition, $data)) {
+        if (!$this->customerModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to update customer. Please try again.');
         } else {
@@ -177,7 +175,7 @@ class Customers extends MYTController
 
         if (!$this->customerModel->select('', $condition, 1)) {
             $response = $this->failNotFound('Customer not found.');
-        } elseif (!$this->customerModel->update($condition, $data)) {
+        } elseif (!$this->customerModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to delete customer. Please try again.');
         } else {

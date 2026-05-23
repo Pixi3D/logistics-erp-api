@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\MYTModel;
+
 class Customer extends MYTModel
 {
     protected $primaryKey       = 'id';
@@ -11,7 +13,6 @@ class Customer extends MYTModel
         'contact_person',
         'contact_number',
         'address',
-        'status',
         'added_by',
         'added_on',
         'updated_by',
@@ -21,6 +22,7 @@ class Customer extends MYTModel
 
     public function __construct()
     {
+        parent::__construct();
         $this->table = 'customer';
     }
 
