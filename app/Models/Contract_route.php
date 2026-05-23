@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\MYTModel;
+
 class Contract_route extends MYTModel
 {
     protected $primaryKey       = 'id';
@@ -21,6 +23,7 @@ class Contract_route extends MYTModel
 
     public function __construct()
     {
+        parent::__construct();
         $this->table = 'contract_route';
     }
 
