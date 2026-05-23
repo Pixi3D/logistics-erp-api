@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\MYTModel;
+
 class Contract extends MYTModel
 {
     protected $primaryKey       = 'id';
@@ -12,9 +14,9 @@ class Contract extends MYTModel
         'included_trips',
         'excess_trip_charge',
         'fuel_price_per_liter',
-        'date_start',
-        'date_end',
-        'status',
+        'start_date',
+        'end_date',
+        'remarks',
         'added_by',
         'added_on',
         'updated_by',
@@ -24,6 +26,7 @@ class Contract extends MYTModel
 
     public function __construct()
     {
+        parent::__construct();
         $this->table = 'contract';
     }
 

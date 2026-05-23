@@ -102,9 +102,10 @@ class Contracts extends MYTController
             'included_trips'       => $this->request->getVar('included_trips'),
             'excess_trip_charge'   => $this->request->getVar('excess_trip_charge'),
             'fuel_price_per_liter' => $this->request->getVar('fuel_price_per_liter'),
-            'date_start'           => $this->request->getVar('date_start'),
-            'date_end'             => $this->request->getVar('date_end') ?: null,
+            'start_date'           => $this->request->getVar('date_start'),
+            'end_date'             => $this->request->getVar('date_end') ?: null,
             'status'               => 'active',
+            'remarks'              => $this->request->getVar('remarks') ?: null,
             'added_by'             => $this->requested_by,
             'added_on'             => date('Y-m-d H:i:s')
         ];
@@ -158,21 +159,16 @@ class Contracts extends MYTController
         $contract_id = $this->request->getVar('contract_id');
         $condition   = ['id' => $contract_id, 'is_deleted' => 0];
 
-        if (!$this->contractModel->select('', $condition, 1)) {
-            $response = $this->failNotFound('Contract not found.');
-            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
-            return $response;
-        }
-
         $data = [
             'customer_id'          => $this->request->getVar('customer_id'),
             'monthly_rate'         => $this->request->getVar('monthly_rate'),
             'included_trips'       => $this->request->getVar('included_trips'),
             'excess_trip_charge'   => $this->request->getVar('excess_trip_charge'),
             'fuel_price_per_liter' => $this->request->getVar('fuel_price_per_liter'),
-            'date_start'           => $this->request->getVar('date_start'),
-            'date_end'             => $this->request->getVar('date_end') ?: null,
+            'start_date'           => $this->request->getVar('date_start'),
+            'end_date'             => $this->request->getVar('date_end') ?: null,
             'status'               => $this->request->getVar('status'),
+            'remarks'              => $this->request->getVar('remarks') ?: null,
             'updated_by'           => $this->requested_by,
             'updated_on'           => date('Y-m-d H:i:s')
         ];
@@ -180,7 +176,7 @@ class Contracts extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->contractModel->update($condition, $data)) {
+        if (!$this->contractModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to update contract. Please try again.');
         } else {
@@ -213,14 +209,12 @@ class Contracts extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->contractModel->select('', $condition, 1)) {
-            $response = $this->failNotFound('Contract not found.');
-        } elseif (!$this->contractModel->update($condition, $data)) {
+        if (!$this->contractModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to delete contract. Please try again.');
         } else {
             // Also soft delete all routes under this contract
-            $this->contractRouteModel->update(
+            $this->contractRouteModel->custom_update(
                 ['contract_id' => $contract_id, 'is_deleted' => 0],
                 ['is_deleted' => 1, 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
             );
