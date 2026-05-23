@@ -47,4 +47,20 @@ EOT;
         $query = $database->query($sql);
         return $query ? $query->getResultArray() : false;
     }
+
+    public function select($columns = null, $conditions = null, $limit = null)
+    {
+        $database = \Config\Database::connect();
+        $builder = $database->table($this->table);
+        if (!empty($conditions)) {
+            $query = $builder->getWhere($conditions, $limit ?? 0);
+        } else {
+            $query = $builder->get($limit ?? 0);
+        }
+        if (!$query || empty($query->getResultArray())) {
+            return false;
+        }
+        $result = $query->getResultArray();
+        return $limit === 1 ? $result[0] : $result;
+    }
 }

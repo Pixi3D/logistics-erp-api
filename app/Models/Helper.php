@@ -19,10 +19,12 @@ class Helper extends MYTModel
         'is_deleted'
     ];
 
-    public function __construct()
-    {
-        $this->table = 'helper';
-    }
+    public $table = 'helper';
+
+public function __construct()
+{
+    parent::__construct();
+}
 
     public function get_all()
     {
