@@ -23,6 +23,7 @@ class Truck extends MYTModel
 
     public function __construct()
     {
+        parent::__construct();    
         $this->table = 'truck';
     }
 

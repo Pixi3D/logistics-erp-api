@@ -18,6 +18,7 @@ class Trip_helper extends MYTModel
 
     public function __construct()
     {
+        parent::__construct();
         $this->table = 'trip_helper';
     }
 

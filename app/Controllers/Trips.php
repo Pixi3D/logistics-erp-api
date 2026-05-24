@@ -149,7 +149,8 @@ class Trips extends MYTController
 
         if (!$trip_id = $this->tripModel->insert($trip_data)) {
             $this->db->transRollback();
-            $response = $this->fail('Unable to record trip. Please try again.');
+            $errors = $this->db->error();
+            $response = $this->fail(json_encode($errors) ?: 'Unable to record trip. Please try again.');
             $this->webappResponseModel->record_response($this->webapp_log_id, $response);
             return $response;
         }
@@ -191,6 +192,7 @@ class Trips extends MYTController
         $this->db->transCommit();
         $response = $this->respond([
             'response'     => 'Trip recorded successfully.',
+            'status'        => 'success',
             'is_excess'    => (bool) $is_excess,
             'excess_charge' => $excess_charge
         ]);
@@ -234,7 +236,7 @@ class Trips extends MYTController
             $response = $this->fail('Unable to update trip. Please try again.');
         } else {
             $this->db->transCommit();
-            $response = $this->respond(['response' => 'Trip updated successfully.']);
+            $response = $this->respond(['response' => 'Trip updated successfully.', 'status' => 'success']);
         }
 
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
@@ -269,7 +271,7 @@ class Trips extends MYTController
             $response = $this->fail('Unable to delete trip. Please try again.');
         } else {
             $this->db->transCommit();
-            $response = $this->respond(['response' => 'Trip deleted successfully.']);
+            $response = $this->respond(['response' => 'Trip updated successfully.', 'status' => 'success']);
         }
 
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
