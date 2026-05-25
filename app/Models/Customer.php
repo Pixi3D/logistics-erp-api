@@ -8,8 +8,21 @@ class Customer extends MYTModel
 {
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
-    protected $allowedFields    = [
-        'name',
+    protected $allowedFields = [
+        'first_name',
+        'last_name',
+        'middle_name',
+        'suffix',
+        'trade_name',
+        'bir_name',
+        'trade_address',
+        'bir_address',
+        'tin',
+        'term',
+        'credit_limit',
+        'payee',
+        'vat_type',
+        'bir_2307',
         'contact_person',
         'contact_number',
         'email',
@@ -34,7 +47,7 @@ class Customer extends MYTModel
 SELECT *
 FROM customer
 WHERE customer.is_deleted = 0
-ORDER BY customer.name ASC
+ORDER BY customer.last_name ASC
 EOT;
         $query = $database->query($sql);
         return $query ? $query->getResultArray() : false;
@@ -64,7 +77,8 @@ EOT;
         $binds = [];
 
         if ($name) {
-            $sql    .= " AND customer.name LIKE ?";
+            $sql .= " AND (customer.first_name LIKE ? OR customer.last_name LIKE ?)";
+            $binds[] = '%' . $name . '%';
             $binds[] = '%' . $name . '%';
         }
 
@@ -73,7 +87,7 @@ EOT;
             $binds[] = $status;
         }
 
-        $sql .= " ORDER BY customer.name ASC";
+        $sql .= " ORDER BY customer.last_name ASC";
 
         $query = $database->query($sql, $binds);
         return $query ? $query->getResultArray() : false;
