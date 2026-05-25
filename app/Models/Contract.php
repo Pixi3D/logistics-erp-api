@@ -40,7 +40,12 @@ class Contract extends MYTModel
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT contract.*,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
+    CASE
+        WHEN contract.status = 'terminated' THEN 'terminated'
+        WHEN contract.end_date IS NOT NULL AND contract.end_date < CURDATE() THEN 'expired'
+        ELSE contract.status
+    END AS status
 FROM contract
 LEFT JOIN customer ON customer.id = contract.customer_id
 WHERE contract.is_deleted = 0
@@ -82,7 +87,13 @@ EOT;
             $binds[] = $customer_id;
         }
 
-        if ($status) {
+        if ($status === 'expired') {
+            $sql .= " AND contract.end_date IS NOT NULL AND contract.end_date < CURDATE()";
+        } elseif ($status === 'terminated') {
+            $sql .= " AND contract.status = 'terminated'";
+        } elseif ($status === 'active') {
+            $sql .= " AND contract.status = 'active' AND (contract.end_date IS NULL OR contract.end_date >= CURDATE())";
+        } elseif ($status) {
             $sql    .= " AND contract.status = ?";
             $binds[] = $status;
         }
