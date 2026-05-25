@@ -142,7 +142,7 @@ class Helpers extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->helperModel->update($condition, $data)) {
+        if (!$this->helperModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to update helper. Please try again.');
         } else {
@@ -177,7 +177,7 @@ class Helpers extends MYTController
 
         if (!$this->helperModel->select('', $condition, 1)) {
             $response = $this->failNotFound('Helper not found.');
-        } elseif (!$this->helperModel->update($condition, $data)) {
+        } elseif (!$this->helperModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to delete helper. Please try again.');
         } else {

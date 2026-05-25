@@ -36,7 +36,15 @@ SELECT trip.*,
     contract_route.origin                               AS route_origin,
     contract_route.destination                          AS route_destination,
     truck.unit_code                                     AS truck_unit_code,
-    truck.plate_number                                  AS truck_plate_number
+    truck.plate_number                                  AS truck_plate_number,
+    (SELECT GROUP_CONCAT(CONCAT(driver.first_name, ' ', driver.last_name) SEPARATOR ', ')
+     FROM trip_driver
+     JOIN driver ON driver.id = trip_driver.driver_id
+     WHERE trip_driver.trip_id = trip.id AND trip_driver.is_deleted = 0) AS drivers_label,
+    (SELECT GROUP_CONCAT(CONCAT(helper.first_name, ' ', helper.last_name) SEPARATOR ', ')
+     FROM trip_helper
+     JOIN helper ON helper.id = trip_helper.helper_id
+     WHERE trip_helper.trip_id = trip.id AND trip_helper.is_deleted = 0) AS helpers_label
 FROM trip
 LEFT JOIN contract        ON contract.id        = trip.contract_id
 LEFT JOIN customer        ON customer.id        = contract.customer_id

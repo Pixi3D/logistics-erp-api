@@ -12,6 +12,7 @@ class Customer extends MYTModel
         'name',
         'contact_person',
         'contact_number',
+        'email',
         'address',
         'added_by',
         'added_on',

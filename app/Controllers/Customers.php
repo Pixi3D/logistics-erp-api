@@ -90,6 +90,7 @@ class Customers extends MYTController
             'name'           => $this->request->getVar('name'),
             'contact_person' => $this->request->getVar('contact_person') ?: null,
             'contact_number' => $this->request->getVar('contact_number') ?: null,
+            'email'          => $this->request->getVar('email')          ?: null,
             'address'        => $this->request->getVar('address')        ?: null,
             'added_by'       => $this->requested_by,
             'added_on'       => date('Y-m-d H:i:s')
@@ -132,6 +133,7 @@ class Customers extends MYTController
             'name'           => $this->request->getVar('name'),
             'contact_person' => $this->request->getVar('contact_person') ?: null,
             'contact_number' => $this->request->getVar('contact_number') ?: null,
+            'email'          => $this->request->getVar('email')          ?: null,
             'address'        => $this->request->getVar('address')        ?: null,
             'updated_by'     => $this->requested_by,
             'updated_on'     => date('Y-m-d H:i:s')
