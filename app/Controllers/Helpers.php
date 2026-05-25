@@ -87,13 +87,25 @@ class Helpers extends MYTController
             return $response;
 
         $data = [
-            'first_name'     => $this->request->getVar('first_name'),
-            'last_name'      => $this->request->getVar('last_name'),
-            'contact_number' => $this->request->getVar('contact_number') ?: null,
-            'address'        => $this->request->getVar('address')        ?: null,
-            'status'         => 'active',
-            'added_by'       => $this->requested_by,
-            'added_on'       => date('Y-m-d H:i:s')
+            'first_name'                      => $this->request->getVar('first_name'),
+            'middle_name'                     => $this->request->getVar('middle_name')                     ?: null,
+            'last_name'                       => $this->request->getVar('last_name'),
+            'suffix'                          => $this->request->getVar('suffix')                          ?: null,
+            'birthdate'                       => $this->request->getVar('birthdate')                       ?: null,
+            'gender'                          => $this->request->getVar('gender')                          ?: null,
+            'civil_status'                    => $this->request->getVar('civil_status')                    ?: null,
+            'nationality'                     => $this->request->getVar('nationality')                     ?: null,
+            'religion'                        => $this->request->getVar('religion')                        ?: null,
+            'email'                           => $this->request->getVar('email')                           ?: null,
+            'contact_number'                  => $this->request->getVar('contact_number')                  ?: null,
+            'address'                         => $this->request->getVar('address')                         ?: null,
+            'emergency_contact_name'          => $this->request->getVar('emergency_contact_name')          ?: null,
+            'emergency_contact_number'        => $this->request->getVar('emergency_contact_number')        ?: null,
+            'emergency_contact_relationship'  => $this->request->getVar('emergency_contact_relationship')  ?: null,
+            'emergency_contact_address'       => $this->request->getVar('emergency_contact_address')       ?: null,
+            'status'                          => 'active',
+            'added_by'                        => $this->requested_by,
+            'added_on'                        => date('Y-m-d H:i:s')
         ];
 
         $this->db = db_connect();
@@ -123,67 +135,40 @@ class Helpers extends MYTController
         $helper_id = $this->request->getVar('helper_id');
         $condition = ['id' => $helper_id, 'is_deleted' => 0];
 
-        if (!$this->helperModel->select('', $condition, 1)) {
+        if (!$this->helperModel->get_details_by_id($helper_id)) {
             $response = $this->failNotFound('Helper not found.');
             $this->webappResponseModel->record_response($this->webapp_log_id, $response);
             return $response;
         }
 
         $data = [
-            'first_name'     => $this->request->getVar('first_name'),
-            'last_name'      => $this->request->getVar('last_name'),
-            'contact_number' => $this->request->getVar('contact_number') ?: null,
-            'address'        => $this->request->getVar('address')        ?: null,
-            'status'         => $this->request->getVar('status'),
-            'updated_by'     => $this->requested_by,
-            'updated_on'     => date('Y-m-d H:i:s')
+            'first_name'                      => $this->request->getVar('first_name'),
+            'middle_name'                     => $this->request->getVar('middle_name')                     ?: null,
+            'last_name'                       => $this->request->getVar('last_name'),
+            'suffix'                          => $this->request->getVar('suffix')                          ?: null,
+            'birthdate'                       => $this->request->getVar('birthdate')                       ?: null,
+            'gender'                          => $this->request->getVar('gender')                          ?: null,
+            'civil_status'                    => $this->request->getVar('civil_status')                    ?: null,
+            'nationality'                     => $this->request->getVar('nationality')                     ?: null,
+            'religion'                        => $this->request->getVar('religion')                        ?: null,
+            'email'                           => $this->request->getVar('email')                           ?: null,
+            'contact_number'                  => $this->request->getVar('contact_number')                  ?: null,
+            'address'                         => $this->request->getVar('address')                         ?: null,
+            'emergency_contact_name'          => $this->request->getVar('emergency_contact_name')          ?: null,
+            'emergency_contact_number'        => $this->request->getVar('emergency_contact_number')        ?: null,
+            'emergency_contact_relationship'  => $this->request->getVar('emergency_contact_relationship')  ?: null,
+            'emergency_contact_address'       => $this->request->getVar('emergency_contact_address')       ?: null,
+            'status'                          => $this->request->getVar('status'),
+            'updated_by'                      => $this->requested_by,
+            'updated_on'                      => date('Y-m-d H:i:s')
         ];
 
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->helperModel->custom_update($condition, $data)) {
-            $this->db->transRollback();
-            $response = $this->fail('Unable to update helper. Please try again.');
-        } else {
-            $this->db->transCommit();
-            $response = $this->respond(['status' => 'success', 'response' => 'Helper updated successfully.']);
-        }
-
-        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
-        return $response;
-    }
-
-    public function delete($id = null)
-    {
-        if (($response = $this->_api_verification('helpers', 'delete')) !== true)
-            return $response;
-
-        $token = $this->request->getVar('token');
-        if (($response = $this->_verify_requester($token)) !== true)
-            return $response;
-
-        $helper_id = $this->request->getVar('helper_id');
-        $condition = ['id' => $helper_id, 'is_deleted' => 0];
-
-        $data = [
-            'is_deleted' => 1,
-            'updated_by' => $this->requested_by,
-            'updated_on' => date('Y-m-d H:i:s')
-        ];
-
-        $this->db = db_connect();
-        $this->db->transBegin();
-
-        if (!$this->helperModel->select('', $condition, 1)) {
-            $response = $this->failNotFound('Helper not found.');
-        } elseif (!$this->helperModel->custom_update($condition, $data)) {
-            $this->db->transRollback();
-            $response = $this->fail('Unable to delete helper. Please try again.');
-        } else {
-            $this->db->transCommit();
-            $response = $this->respond(['status' => 'success', 'response' => 'Helper deleted successfully.']);
-        }
+        $this->helperModel->custom_update($condition, $data);
+        $this->db->transCommit();
+        $response = $this->respond(['status' => 'success', 'response' => 'Helper updated successfully.']);
 
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
         return $response;
