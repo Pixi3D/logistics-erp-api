@@ -108,7 +108,7 @@ class Users extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->userModel->update($condition, $data)) {
+        if (!$this->userModel->update($user_id, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to update user. Please try again.');
         } else {
