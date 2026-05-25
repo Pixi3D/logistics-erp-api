@@ -213,12 +213,6 @@ class Trips extends MYTController
         $trip_id   = $this->request->getVar('trip_id');
         $condition = ['id' => $trip_id, 'is_deleted' => 0];
 
-        if (!$this->tripModel->select('', $condition, 1)) {
-            $response = $this->failNotFound('Trip not found.');
-            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
-            return $response;
-        }
-
         $data = [
             'contract_route_id' => $this->request->getVar('contract_route_id'),
             'truck_id'          => $this->request->getVar('truck_id'),
@@ -231,10 +225,41 @@ class Trips extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->tripModel->update($condition, $data)) {
+        $driver_ids = $this->request->getVar('driver_ids') ?: [];
+        $helper_ids = $this->request->getVar('helper_ids') ?: [];
+
+        if (!$this->tripModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to update trip. Please try again.');
         } else {
+            // Sync drivers — soft delete old, insert new
+            $this->tripDriverModel->custom_update(
+                ['trip_id' => $trip_id, 'is_deleted' => 0],
+                ['is_deleted' => 1, 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+            );
+            foreach ($driver_ids as $driver_id) {
+                $this->tripDriverModel->insert([
+                    'trip_id'   => $trip_id,
+                    'driver_id' => $driver_id,
+                    'added_by'  => $this->requested_by,
+                    'added_on'  => date('Y-m-d H:i:s')
+                ]);
+            }
+
+            // Sync helpers
+            $this->tripHelperModel->custom_update(
+                ['trip_id' => $trip_id, 'is_deleted' => 0],
+                ['is_deleted' => 1, 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+            );
+            foreach ($helper_ids as $helper_id) {
+                $this->tripHelperModel->insert([
+                    'trip_id'   => $trip_id,
+                    'helper_id' => $helper_id,
+                    'added_by'  => $this->requested_by,
+                    'added_on'  => date('Y-m-d H:i:s')
+                ]);
+            }
+
             $this->db->transCommit();
             $response = $this->respond(['response' => 'Trip updated successfully.', 'status' => 'success']);
         }

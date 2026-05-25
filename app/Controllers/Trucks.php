@@ -147,7 +147,7 @@ class Trucks extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->truckModel->update($condition, $data)) {
+        if (!$this->truckModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to update truck. Please try again.');
         } else {
@@ -182,7 +182,7 @@ class Trucks extends MYTController
 
         if (!$this->truckModel->select('', $condition, 1)) {
             $response = $this->failNotFound('Truck not found.');
-        } elseif (!$this->truckModel->update($condition, $data)) {
+        } elseif (!$this->truckModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to delete truck. Please try again.');
         } else {

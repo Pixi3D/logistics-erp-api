@@ -126,17 +126,12 @@ class Drivers extends MYTController
         $driver_id = $this->request->getVar('driver_id');
         $condition = ['id' => $driver_id, 'is_deleted' => 0];
 
-        if (!$this->driverModel->select('', $condition, 1)) {
-            $response = $this->failNotFound('Driver not found.');
-            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
-            return $response;
-        }
-
         $data = [
             'first_name'     => $this->request->getVar('first_name'),
             'last_name'      => $this->request->getVar('last_name'),
             'contact_number' => $this->request->getVar('contact_number') ?: null,
             'license_number' => $this->request->getVar('license_number') ?: null,
+            'license_expiry' => $this->request->getVar('license_expiry') ?: null,
             'address'        => $this->request->getVar('address')        ?: null,
             'status'         => $this->request->getVar('status'),
             'updated_by'     => $this->requested_by,
@@ -179,9 +174,7 @@ class Drivers extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->driverModel->select('', $condition, 1)) {
-            $response = $this->failNotFound('Driver not found.');
-        } elseif (!$this->driverModel->custom_update($condition, $data)) {
+        if (!$this->driverModel->custom_update($condition, $data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to delete driver. Please try again.');
         } else {
