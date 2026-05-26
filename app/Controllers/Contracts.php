@@ -92,7 +92,7 @@ class Contracts extends MYTController
         if (($response = $this->_api_verification('contracts', 'create')) !== true)
             return $response;
 
-        $token = $this->request->getVar('token');
+        $token = $this->request->getJsonVar('token');
         if (($response = $this->_verify_requester($token)) !== true)
             return $response;
 
@@ -134,6 +134,7 @@ class Contracts extends MYTController
 
         // Insert routes
         foreach ($routes as $route) {
+            $route = (array) $route;
             if (empty($route['origin']) || empty($route['destination'])) continue;
             $route_data = [
                 'contract_id' => $contract_id,
@@ -165,7 +166,7 @@ class Contracts extends MYTController
         if (($response = $this->_api_verification('contracts', 'update')) !== true)
             return $response;
 
-        $token = $this->request->getVar('token');
+        $token = $this->request->getJsonVar('token');
         if (($response = $this->_verify_requester($token)) !== true)
             return $response;
 
@@ -208,6 +209,7 @@ class Contracts extends MYTController
         );
 
         foreach ($routes as $route) {
+            $route = (array) $route;
             $route_data = [
                 'contract_id' => $contract_id,
                 'origin'      => $route['origin'],
