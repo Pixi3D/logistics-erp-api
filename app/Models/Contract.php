@@ -9,6 +9,10 @@ class Contract extends MYTModel
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $allowedFields    = [
+        'contract_number',
+        'date_signed',
+        'authorized_representative',
+        'payment_terms',
         'customer_id',
         'monthly_rate',
         'included_trips',
@@ -16,6 +20,7 @@ class Contract extends MYTModel
         'fuel_price_per_liter',
         'start_date',
         'end_date',
+        'status',
         'remarks',
         'added_by',
         'added_on',
@@ -35,7 +40,7 @@ class Contract extends MYTModel
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT contract.*,
-    customer.name AS customer_name
+    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
 FROM contract
 LEFT JOIN customer ON customer.id = contract.customer_id
 WHERE contract.is_deleted = 0
@@ -50,7 +55,7 @@ EOT;
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT contract.*,
-    customer.name AS customer_name
+    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
 FROM contract
 LEFT JOIN customer ON customer.id = contract.customer_id
 WHERE contract.id = ?
@@ -65,7 +70,7 @@ EOT;
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT contract.*,
-    customer.name AS customer_name
+    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
 FROM contract
 LEFT JOIN customer ON customer.id = contract.customer_id
 WHERE contract.is_deleted = 0
