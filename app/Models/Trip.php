@@ -32,7 +32,7 @@ class Trip extends MYTModel
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT trip.*,
-    customer.name                                       AS customer_name,
+    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
     contract_route.origin                               AS route_origin,
     contract_route.destination                          AS route_destination,
     truck.unit_code                                     AS truck_unit_code,
@@ -62,7 +62,7 @@ EOT;
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT trip.*,
-    customer.name                                       AS customer_name,
+    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
     contract_route.origin                               AS route_origin,
     contract_route.destination                          AS route_destination,
     truck.unit_code                                     AS truck_unit_code,
@@ -84,7 +84,7 @@ EOT;
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT trip.*,
-    customer.name                                       AS customer_name,
+    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
     contract_route.origin                               AS route_origin,
     contract_route.destination                          AS route_destination,
     truck.unit_code                                     AS truck_unit_code,
