@@ -9,8 +9,10 @@ class Truck extends MYTModel
     protected $allowedFields    = [
         'unit_code',
         'plate_number',
+        'truck_type',   
         'color',
         'capacity',
+        'or_expiry',
         'km_per_liter',
         'status',
         'remarks',
@@ -20,7 +22,6 @@ class Truck extends MYTModel
         'updated_on',
         'is_deleted'
     ];
-
     public function __construct()
     {
         parent::__construct();    

@@ -90,8 +90,10 @@ class Trucks extends MYTController
         $data = [
             'unit_code'    => $this->request->getVar('unit_code'),
             'plate_number' => $this->request->getVar('plate_number'),
+            'truck_type'  => $this->request->getVar('truck_type')  ?: null,  // ADD
             'color'        => $this->request->getVar('color')        ?: null,
             'capacity'     => $this->request->getVar('capacity')     ?: null,
+            'or_expiry'    => $this->request->getVar('or_expiry')    ?: null,  // ADD
             'km_per_liter' => $this->request->getVar('km_per_liter') ?: null,
             'status'       => $this->request->getVar('status')       ?: 'active',
             'remarks'      => $this->request->getVar('remarks')      ?: null,
@@ -135,8 +137,10 @@ class Trucks extends MYTController
         $data = [
             'unit_code'    => $this->request->getVar('unit_code'),
             'plate_number' => $this->request->getVar('plate_number'),
+            'truck_type'  => $this->request->getVar('truck_type')  ?: null,  // ADD
             'color'        => $this->request->getVar('color')        ?: null,
             'capacity'     => $this->request->getVar('capacity')     ?: null,
+            'or_expiry'    => $this->request->getVar('or_expiry')    ?: null,  // ADD
             'km_per_liter' => $this->request->getVar('km_per_liter') ?: null,
             'status'       => $this->request->getVar('status')       ?: 'active',
             'remarks'      => $this->request->getVar('remarks')      ?: null,
