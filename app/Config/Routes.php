@@ -68,6 +68,8 @@ $routes->post('trips/create',         'Trips::create');
 $routes->post('trips/update',         'Trips::update');
 $routes->post('trips/delete',         'Trips::delete');
 $routes->get('trips/compute_billing', 'Trips::compute_billing');
+$routes->get('trips/get_contract_trip_info', 'Trips::get_contract_trip_info');
+$routes->get('trips/get_suggestions', 'Trips::get_suggestions');
 
 // USERS
 $routes->get('users/index',   'Users::index');
