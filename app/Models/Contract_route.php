@@ -31,7 +31,7 @@ class Contract_route extends MYTModel
 {
     $database = \Config\Database::connect();
     $sql = <<<EOT
-SELECT contract_route.*, customer.name AS contract_name
+SELECT contract_route.*, CONCAT(customer.first_name, ' ', customer.last_name) AS contract_name
 FROM contract_route
 LEFT JOIN contract ON contract.id = contract_route.contract_id
 LEFT JOIN customer ON customer.id = contract.customer_id
@@ -47,7 +47,7 @@ public function get_details_by_id($route_id)
 {
     $database = \Config\Database::connect();
     $sql = <<<EOT
-SELECT contract_route.*, customer.name AS contract_name
+SELECT contract_route.*, CONCAT(customer.first_name, ' ', customer.last_name) AS contract_name
 FROM contract_route
 LEFT JOIN contract ON contract.id = contract_route.contract_id
 LEFT JOIN customer ON customer.id = contract.customer_id
@@ -62,7 +62,7 @@ public function get_all()
 {
     $database = \Config\Database::connect();
     $sql = <<<EOT
-SELECT contract_route.*, customer.name AS contract_name
+SELECT contract_route.*, CONCAT(customer.first_name, ' ', customer.last_name) AS contract_name
 FROM contract_route
 LEFT JOIN contract ON contract.id = contract_route.contract_id
 LEFT JOIN customer ON customer.id = contract.customer_id
