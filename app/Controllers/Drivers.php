@@ -111,7 +111,7 @@ protected $driverAttachmentModel;
             'pagibig_number'                  => $this->request->getVar('pagibig_number')                  ?: null,
             'philhealth_number'               => $this->request->getVar('philhealth_number')               ?: null,
             'tin_number'                      => $this->request->getVar('tin_number')                      ?: null,
-            'status'                          => $this->request->getVar('status'),
+            'status'                          => $this->request->getVar('status') ?: 'active',
             'added_by'                        => $this->requested_by,
             'added_on'                        => date('Y-m-d H:i:s')
         ];
@@ -202,7 +202,7 @@ protected $driverAttachmentModel;
             'pagibig_number'                  => $this->request->getVar('pagibig_number')                  ?: null,
             'philhealth_number'               => $this->request->getVar('philhealth_number')               ?: null,
             'tin_number'                      => $this->request->getVar('tin_number')                      ?: null,
-            'status'                          => $this->request->getVar('status'),
+            'status'                          => $this->request->getVar('status') ?: 'active',
             'updated_by'                      => $this->requested_by,
             'updated_on'                      => date('Y-m-d H:i:s')
         ];
