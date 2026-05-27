@@ -5,6 +5,7 @@ namespace App\Controllers;
 class Helpers extends MYTController
 {
     protected $helperModel;
+    protected $helperAttachmentModel;
     protected $webappResponseModel;
 
     public function __construct()
@@ -115,6 +116,37 @@ class Helpers extends MYTController
             $this->db->transRollback();
             $response = $this->fail('Unable to add helper. Please try again.');
         } else {
+            $helper_id = $this->helperModel->getInsertID();
+            $files = $this->request->getFiles();
+            if (!empty($files['attachments'])) {
+                $upload_path = FCPATH . 'uploads/helpers/' . $helper_id . '/';
+                if (!is_dir($upload_path)) {
+                    mkdir($upload_path, 0755, true);
+                }
+                foreach ($files['attachments'] as $file) {
+                    if (!$file->isValid() || $file->hasMoved()) continue;
+                    $new_name     = $file->getRandomName();
+                    $file->move($upload_path, $new_name);
+                    $client_name  = $file->getClientName();
+                    $helper_name  = preg_replace('/\s+/', '', $this->request->getPost('last_name'));
+                    $ext          = pathinfo($client_name, PATHINFO_EXTENSION);
+                    $display_name = $helper_name . '_License.' . $ext;
+                    $attachment_data = [
+                        'helper_id' => $helper_id,
+                        'file_name' => $display_name,
+                        'file_path' => 'uploads/helpers/' . $helper_id . '/' . $new_name,
+                        'added_by'  => $this->requested_by,
+                        'added_on'  => date('Y-m-d H:i:s'),
+                    ];
+                    if (!$this->helperAttachmentModel->insert($attachment_data)) {
+                        $this->db->transRollback();
+                        $response = $this->fail('Helper created but failed to save attachment.');
+                        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+                        return $response;
+                    }
+                }
+            }
+
             $this->db->transCommit();
             $response = $this->respond(['status' => 'success', 'response' => 'Helper added successfully.']);
         }
@@ -167,6 +199,37 @@ class Helpers extends MYTController
         $this->db->transBegin();
 
         $this->helperModel->custom_update($condition, $data);
+
+        $files = $this->request->getFiles();
+        if (!empty($files['attachments'])) {
+            $upload_path = FCPATH . 'uploads/helpers/' . $helper_id . '/';
+            if (!is_dir($upload_path)) {
+                mkdir($upload_path, 0755, true);
+            }
+            foreach ($files['attachments'] as $file) {
+                if (!$file->isValid() || $file->hasMoved()) continue;
+                $new_name     = $file->getRandomName();
+                $file->move($upload_path, $new_name);
+                $client_name  = $file->getClientName();
+                $helper_name  = preg_replace('/\s+/', '', $this->request->getPost('last_name'));
+                $ext          = pathinfo($client_name, PATHINFO_EXTENSION);
+                $display_name = $helper_name . '_License.' . $ext;
+                $attachment_data = [
+                    'helper_id' => $helper_id,
+                    'file_name' => $display_name,
+                    'file_path' => 'uploads/helpers/' . $helper_id . '/' . $new_name,
+                    'added_by'  => $this->requested_by,
+                    'added_on'  => date('Y-m-d H:i:s'),
+                ];
+                if (!$this->helperAttachmentModel->insert($attachment_data)) {
+                    $this->db->transRollback();
+                    $response = $this->fail('Helper updated but failed to save attachment.');
+                    $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+                    return $response;
+                }
+            }
+        }
+
         $this->db->transCommit();
         $response = $this->respond(['status' => 'success', 'response' => 'Helper updated successfully.']);
 
@@ -174,9 +237,71 @@ class Helpers extends MYTController
         return $response;
     }
 
-    protected function _load_essentials()
+    public function get_attachments()
     {
-        $this->helperModel         = model('App\Models\Helper');
-        $this->webappResponseModel = model('App\Models\Webapp_response');
+        if (($response = $this->_api_verification('helpers', 'get_attachments')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $helper_id   = $this->request->getVar('helper_id');
+        $attachments = $this->helperAttachmentModel->get_by_helper_id($helper_id);
+
+        $response = $this->respond(['data' => $attachments ?: [], 'status' => 'success']);
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
     }
+
+    public function download_attachment()
+    {
+        $file_path = $this->request->getVar('file_path');
+        $file_name = $this->request->getVar('file_name');
+        $full_path = FCPATH . $file_path;
+
+        if (!file_exists($full_path)) {
+            return $this->failNotFound('File not found.');
+        }
+
+        $mime = mime_content_type($full_path);
+
+        return $this->response
+            ->setHeader('Content-Type', $mime)
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $file_name . '"')
+            ->setHeader('Content-Length', filesize($full_path))
+            ->setBody(file_get_contents($full_path));
+    }
+
+    public function delete_attachment()
+    {
+        if (($response = $this->_api_verification('helpers', 'delete_attachment')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $attachment_id = $this->request->getVar('attachment_id');
+        $condition     = ['id' => $attachment_id, 'is_deleted' => 0];
+        $data          = ['is_deleted' => 1, 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')];
+
+        $this->db = db_connect();
+        $this->helperAttachmentModel->custom_update($condition, $data);
+
+        if ($this->db->error()['code']) {
+            $response = $this->fail('Failed to remove attachment.');
+        } else {
+            $response = $this->respond(['response' => 'Attachment removed.', 'status' => 'success']);
+        }
+
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
+    }
+    protected function _load_essentials()
+{
+    $this->helperModel           = model('App\Models\Helper');
+    $this->helperAttachmentModel = model('App\Models\Helper_attachment');
+    $this->webappResponseModel   = model('App\Models\Webapp_response');
+}
 }
