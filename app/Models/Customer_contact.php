@@ -8,7 +8,7 @@ class Customer_contact extends MYTModel
     protected $useAutoIncrement = true;
     protected $allowedFields = [
         'customer_id', 'first_name', 'middle_name', 'last_name', 'suffix',
-        'contact_number', 'email', 'role',
+        'contact_number', 'email', 'role', 'position',
         'added_by', 'added_on', 'updated_by', 'updated_on', 'is_deleted'
     ];
 

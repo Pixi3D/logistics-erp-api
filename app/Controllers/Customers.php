@@ -149,9 +149,11 @@ class Customers extends MYTController
                 'suffix'         => $contact['suffix']       ?? null,
                 'contact_number' => $contact['number']       ?? null,
                 'email'          => $contact['email']        ?? null,
-                'role'           => $contact['role'] === 'Others'
+                'position'       => $contact['position']     ?? null,
+                'role'           => ($contact['role'] ?? '') === 'Others'
                                         ? ($contact['other_role'] ?? 'Others')
                                         : ($contact['role'] ?? null),
+                                        
                 'added_by'       => $this->requested_by,
                 'added_on'       => date('Y-m-d H:i:s'),
             ];
@@ -274,9 +276,10 @@ class Customers extends MYTController
                 'suffix'         => $contact['suffix']       ?? null,
                 'contact_number' => $contact['number']       ?? null,
                 'email'          => $contact['email']        ?? null,
-                'role'           => $contact['role'] === 'Others'
+                'role'           => ($contact['role'] ?? '') === 'Others'
                                         ? ($contact['other_role'] ?? 'Others')
                                         : ($contact['role'] ?? null),
+                                        
                 'added_by'       => $this->requested_by,
                 'added_on'       => date('Y-m-d H:i:s'),
             ];
