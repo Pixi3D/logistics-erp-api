@@ -9,7 +9,8 @@ class Truck extends MYTModel
     protected $allowedFields    = [
         'unit_code',
         'plate_number',
-        'truck_type',   
+        'truck_type',
+        'or_expiry',   
         'color',
         'capacity',
         'or_expiry',

@@ -21,6 +21,10 @@ $routes->get('trucks/details', 'Trucks::details');
 $routes->post('trucks/create', 'Trucks::create');
 $routes->post('trucks/update', 'Trucks::update');
 $routes->post('trucks/delete', 'Trucks::delete');
+$routes->get('trucks/get_attachments', 'Trucks::get_attachments');
+$routes->get('trucks/download_attachment', 'Trucks::download_attachment');
+$routes->post('trucks/delete_attachment', 'Trucks::delete_attachment');
+$routes->get('trucks/get_suggestions', 'Trucks::get_suggestions');
 
 // DRIVERS
 $routes->get('drivers/index',   'Drivers::index');
@@ -29,6 +33,9 @@ $routes->get('drivers/details', 'Drivers::details');
 $routes->post('drivers/create', 'Drivers::create');
 $routes->post('drivers/update', 'Drivers::update');
 $routes->post('drivers/delete', 'Drivers::delete');
+$routes->get('drivers/get_attachments',     'Drivers::get_attachments');
+$routes->get('drivers/download_attachment', 'Drivers::download_attachment');
+$routes->post('drivers/delete_attachment',  'Drivers::delete_attachment');
 
 // HELPERS
 $routes->get('helpers/index',   'Helpers::index');
@@ -37,6 +44,9 @@ $routes->get('helpers/details', 'Helpers::details');
 $routes->post('helpers/create', 'Helpers::create');
 $routes->post('helpers/update', 'Helpers::update');
 $routes->post('helpers/delete', 'Helpers::delete');
+$routes->get('helpers/get_attachments',     'Helpers::get_attachments');
+$routes->get('helpers/download_attachment', 'Helpers::download_attachment');
+$routes->post('helpers/delete_attachment',  'Helpers::delete_attachment');
 
 // CUSTOMERS
 $routes->get('customers/index',   'Customers::index');
