@@ -154,4 +154,34 @@ class Users extends MYTController
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
         return $response;
     }
+
+    public function get_suggestions()
+{
+    if (($response = $this->_api_verification('users', 'get_suggestions')) !== true)
+        return $response;
+
+    $token = $this->request->getVar('token');
+    if (($response = $this->_verify_requester($token)) !== true)
+        return $response;
+
+    $keyword = $this->request->getVar('keyword') ?: '';
+
+    $database = \Config\Database::connect();
+
+    $users = $database->query("
+        SELECT id, CONCAT(first_name, ' ', last_name, ' — ', email) AS label
+        FROM user
+        WHERE is_deleted = 0
+          AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR role LIKE ?)
+        LIMIT 10
+    ", ["%$keyword%", "%$keyword%", "%$keyword%", "%$keyword%"])->getResultArray();
+
+    $response = $this->respond([
+        'data'   => ['users' => $users],
+        'status' => 'success'
+    ]);
+
+    $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+    return $response;
+}
 }
