@@ -39,18 +39,26 @@ class Contract extends MYTModel
     {
         $database = \Config\Database::connect();
         $sql = <<<EOT
-SELECT contract.*,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
-    CASE
-        WHEN contract.status = 'terminated' THEN 'terminated'
-        WHEN contract.end_date IS NOT NULL AND contract.end_date < CURDATE() THEN 'expired'
-        ELSE contract.status
-    END AS status
-FROM contract
-LEFT JOIN customer ON customer.id = contract.customer_id
-WHERE contract.is_deleted = 0
-ORDER BY contract.added_on DESC
-EOT;
+    SELECT contract.*,
+        CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
+        CONCAT(cc.first_name, ' ', cc.last_name) AS authorized_signatory,
+        CASE
+            WHEN contract.status = 'terminated' THEN 'terminated'
+            WHEN contract.end_date IS NOT NULL AND contract.end_date < CURDATE() THEN 'expired'
+            ELSE contract.status
+        END AS status
+    FROM contract
+    LEFT JOIN customer ON customer.id = contract.customer_id
+    LEFT JOIN (
+        SELECT customer_id, first_name, last_name
+        FROM customer_contact
+        WHERE role = 'Authorized Signatory'
+        AND is_deleted = 0
+        ORDER BY added_on DESC
+    ) cc ON cc.customer_id = customer.id
+    WHERE contract.is_deleted = 0
+    ORDER BY contract.added_on DESC
+    EOT;
         $query = $database->query($sql);
         return $query ? $query->getResultArray() : false;
     }
