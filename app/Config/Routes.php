@@ -107,6 +107,10 @@ $routes->post('contract_billings/update', 'Contract_billings::update');
 $routes->post('contract_billings/delete', 'Contract_billings::delete');
 $routes->get('contract_billings/get_unbilled_cycles', 'Contract_billings::get_unbilled_cycles');
 $routes->get('contract_billings/preview',             'Contract_billings::preview');
+$routes->get('contract_billing_payments/get_attachments',    'Contract_billing_payments::get_attachments');
+$routes->post('contract_billing_payments/upload_attachment',  'Contract_billing_payments::upload_attachment');
+$routes->post('contract_billing_payments/delete_attachment',  'Contract_billing_payments::delete_attachment');
+$routes->get('contract_billing_payments/download_attachment', 'Contract_billing_payments::download_attachment');
 
 // CONTRACT BILLING PAYMENTS
 $routes->get('contract_billing_payments/index',   'Contract_billing_payments::index');
