@@ -125,13 +125,14 @@ class Contract_billing_payments extends MYTController
             'amount'           => $amount,
             'reference_number' => $this->request->getVar('reference_number') ?: null,
             'check_number'     => $this->request->getVar('check_number')     ?: null,
-            'check_date'       => (!empty($check_date)    && $check_date    !== '0000-00-00') ? $check_date    : null,
+            'check_date'       => $this->request->getVar('check_date')       ?: null,
             'bank_name'        => $this->request->getVar('bank_name')        ?: null,
-            'deposit_date'     => (!empty($deposit_date)  && $deposit_date  !== '0000-00-00') ? $deposit_date  : null,
+            'deposit_date'     => $this->request->getVar('deposit_date')     ?: null,
             'deposited_to'     => $this->request->getVar('deposited_to')     ?: null,
-            'transfer_date'    => (!empty($transfer_date) && $transfer_date !== '0000-00-00') ? $transfer_date : null,
+            'transfer_date'    => $this->request->getVar('transfer_date')    ?: null,
             'remarks'          => $this->request->getVar('remarks')          ?: null,
             'added_by'         => $this->requested_by,
+            'added_on'         => date('Y-m-d H:i:s'),
         ];
 
         $this->db = db_connect();
@@ -139,7 +140,8 @@ class Contract_billing_payments extends MYTController
 
         if (!$this->contractBillingPaymentModel->insert($data)) {
             $this->db->transRollback();
-            $response = $this->fail('Unable to record payment. Please try again.');
+            $db_error = $this->db->error();
+            $response = $this->fail('Unable to record payment: ' . $db_error['message']);
             $this->webappResponseModel->record_response($this->webapp_log_id, $response);
             return $response;
         }

@@ -8,7 +8,7 @@ class Contract_billing_payment extends MYTModel
 {
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
-    protected $allowedFields    = [
+    protected $allowedFields = [
         'billing_id',
         'payment_date',
         'payment_method',
