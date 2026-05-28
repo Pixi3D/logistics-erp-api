@@ -112,7 +112,7 @@ class Helpers extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        if (!$this->helperModel->insert($data)) {
+        if (!$helper_id = $this->helperModel->insert($data)) {
             $this->db->transRollback();
             $response = $this->fail('Unable to add helper. Please try again.');
         } else {
@@ -190,6 +190,10 @@ class Helpers extends MYTController
             'emergency_contact_number'        => $this->request->getVar('emergency_contact_number')        ?: null,
             'emergency_contact_relationship'  => $this->request->getVar('emergency_contact_relationship')  ?: null,
             'emergency_contact_address'       => $this->request->getVar('emergency_contact_address')       ?: null,
+            'sss_number'                      => $this->request->getVar('sss_number')                      ?: null,
+            'pagibig_number'                  => $this->request->getVar('pagibig_number')                  ?: null,
+            'philhealth_number'               => $this->request->getVar('philhealth_number')               ?: null,
+            'tin_number'                      => $this->request->getVar('tin_number')                      ?: null,
             'status'                          => $this->request->getVar('status'),
             'updated_by'                      => $this->requested_by,
             'updated_on'                      => date('Y-m-d H:i:s')
@@ -198,7 +202,10 @@ class Helpers extends MYTController
         $this->db = db_connect();
         $this->db->transBegin();
 
-        $this->helperModel->custom_update($condition, $data);
+        if (!$this->helperModel->custom_update($condition, $data)) {
+            $this->db->transRollback();
+            $response = $this->fail('Unable to update helper. Please try again.');
+        } else {
 
         $files = $this->request->getFiles();
         if (!empty($files['attachments'])) {
@@ -232,6 +239,7 @@ class Helpers extends MYTController
 
         $this->db->transCommit();
         $response = $this->respond(['status' => 'success', 'response' => 'Helper updated successfully.']);
+        }
 
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
         return $response;
@@ -298,6 +306,37 @@ class Helpers extends MYTController
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
         return $response;
     }
+
+    public function get_suggestions()
+{
+    if (($response = $this->_api_verification('helpers', 'get_suggestions')) !== true)
+        return $response;
+
+    $token = $this->request->getVar('token');
+    if (($response = $this->_verify_requester($token)) !== true)
+        return $response;
+
+    $keyword = $this->request->getVar('keyword') ?: '';
+
+    $database = \Config\Database::connect();
+
+    $helpers = $database->query("
+        SELECT id, CONCAT(first_name, ' ', last_name) AS label
+        FROM helper
+        WHERE is_deleted = 0
+          AND (first_name LIKE ? OR last_name LIKE ? OR contact_number LIKE ?)
+        LIMIT 10
+    ", ["%$keyword%", "%$keyword%", "%$keyword%"])->getResultArray();
+
+    $response = $this->respond([
+        'data'   => ['helpers' => $helpers],
+        'status' => 'success'
+    ]);
+
+    $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+    return $response;
+}
+
     protected function _load_essentials()
 {
     $this->helperModel           = model('App\Models\Helper');
