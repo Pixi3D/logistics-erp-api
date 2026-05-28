@@ -97,3 +97,20 @@ $routes->post('users/delete', 'Users::delete');
 
 // TRAIL
 $routes->get('trail/index', 'Trail::index');
+
+// CONTRACT BILLINGS
+$routes->get('contract_billings/index',   'Contract_billings::index');
+$routes->get('contract_billings/search',  'Contract_billings::search');
+$routes->get('contract_billings/details', 'Contract_billings::details');
+$routes->post('contract_billings/create', 'Contract_billings::create');
+$routes->post('contract_billings/update', 'Contract_billings::update');
+$routes->post('contract_billings/delete', 'Contract_billings::delete');
+$routes->get('contract_billings/get_unbilled_cycles', 'Contract_billings::get_unbilled_cycles');
+$routes->get('contract_billings/preview',             'Contract_billings::preview');
+
+// CONTRACT BILLING PAYMENTS
+$routes->get('contract_billing_payments/index',   'Contract_billing_payments::index');
+$routes->get('contract_billing_payments/search',  'Contract_billing_payments::search');
+$routes->get('contract_billing_payments/details', 'Contract_billing_payments::details');
+$routes->post('contract_billing_payments/create', 'Contract_billing_payments::create');
+$routes->post('contract_billing_payments/delete', 'Contract_billing_payments::delete');
