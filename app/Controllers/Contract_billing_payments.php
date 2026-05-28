@@ -5,6 +5,7 @@ namespace App\Controllers;
 class Contract_billing_payments extends MYTController
 {
     protected $contractBillingPaymentModel;
+    protected $contractBillingPaymentAttachmentModel;
     protected $contractBillingModel;
     protected $webappResponseModel;
 
@@ -113,6 +114,10 @@ class Contract_billing_payments extends MYTController
             return $response;
         }
 
+        $check_date    = $this->request->getVar('check_date');
+        $deposit_date  = $this->request->getVar('deposit_date');
+        $transfer_date = $this->request->getVar('transfer_date');
+
         $data = [
             'billing_id'       => $billing_id,
             'payment_date'     => $payment_date,
@@ -120,14 +125,13 @@ class Contract_billing_payments extends MYTController
             'amount'           => $amount,
             'reference_number' => $this->request->getVar('reference_number') ?: null,
             'check_number'     => $this->request->getVar('check_number')     ?: null,
-            'check_date'       => $this->request->getVar('check_date')       ?: null,
+            'check_date'       => (!empty($check_date)    && $check_date    !== '0000-00-00') ? $check_date    : null,
             'bank_name'        => $this->request->getVar('bank_name')        ?: null,
-            'deposit_date'     => $this->request->getVar('deposit_date')     ?: null,
+            'deposit_date'     => (!empty($deposit_date)  && $deposit_date  !== '0000-00-00') ? $deposit_date  : null,
             'deposited_to'     => $this->request->getVar('deposited_to')     ?: null,
-            'transfer_date'    => $this->request->getVar('transfer_date')    ?: null,
+            'transfer_date'    => (!empty($transfer_date) && $transfer_date !== '0000-00-00') ? $transfer_date : null,
             'remarks'          => $this->request->getVar('remarks')          ?: null,
             'added_by'         => $this->requested_by,
-            'added_on'         => date('Y-m-d H:i:s'),
         ];
 
         $this->db = db_connect();
@@ -148,15 +152,16 @@ class Contract_billing_payments extends MYTController
             return $response;
         }
 
+        $payment_id = $this->contractBillingPaymentModel->getInsertID();
         $this->db->transCommit();
-        $response = $this->respond(['status' => 'success', 'response' => 'Payment recorded successfully.']);
+        $response = $this->respond(['status' => 'success', 'response' => 'Payment recorded successfully.', 'payment_id' => $payment_id]);
 
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
         return $response;
     }
 
     // POST contract_billing_payments/delete
-    public function delete()
+    public function delete($id = null)
     {
         if (($response = $this->_api_verification('contract_billing_payments', 'delete')) !== true)
             return $response;
@@ -246,8 +251,106 @@ class Contract_billing_payments extends MYTController
 
     protected function _load_essentials()
     {
-        $this->contractBillingPaymentModel = model('App\Models\Contract_billing_payment');
-        $this->contractBillingModel        = model('App\Models\Contract_billing');
-        $this->webappResponseModel         = model('App\Models\Webapp_response');
+        $this->contractBillingPaymentModel           = model('App\Models\Contract_billing_payment');
+        $this->contractBillingPaymentAttachmentModel = model('App\Models\Contract_billing_payment_attachment');
+        $this->contractBillingModel                  = model('App\Models\Contract_billing');
+        $this->webappResponseModel                   = model('App\Models\Webapp_response');
+    }
+
+
+    // GET contract_billing_payments/get_attachments
+    public function get_attachments()
+    {
+        if (($response = $this->_api_verification('contract_billing_payments', 'get_attachments')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $payment_id  = $this->request->getVar('payment_id');
+        $attachments = $this->contractBillingPaymentAttachmentModel->get_by_payment_id($payment_id) ?: [];
+
+        $response = $this->respond(['data' => $attachments, 'status' => 'success']);
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
+    }
+
+    // POST contract_billing_payments/upload_attachment
+    public function upload_attachment()
+    {
+        if (($response = $this->_api_verification('contract_billing_payments', 'upload_attachment')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $payment_id = $this->request->getVar('payment_id');
+        $files      = $this->request->getFiles('attachments') ?? [];
+
+        if (empty($files)) {
+            $response = $this->fail('No files uploaded.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        $upload_path = WRITEPATH . 'uploads/payment_attachments/';
+        if (!is_dir($upload_path)) mkdir($upload_path, 0755, true);
+
+        foreach ($files as $file) {
+            if (!$file->isValid()) continue;
+            $new_name  = $file->getRandomName();
+            $file->move($upload_path, $new_name);
+            $this->contractBillingPaymentAttachmentModel->insert([
+                'payment_id' => $payment_id,
+                'file_name'  => $file->getClientName(),
+                'file_path'  => 'payment_attachments/' . $new_name,
+                'added_by'   => $this->requested_by,
+                'added_on'   => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        $response = $this->respond(['status' => 'success', 'response' => 'Attachments uploaded.']);
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
+    }
+
+    // POST contract_billing_payments/delete_attachment
+    public function delete_attachment()
+    {
+        if (($response = $this->_api_verification('contract_billing_payments', 'delete_attachment')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $attachment_id = $this->request->getVar('attachment_id');
+        $this->contractBillingPaymentAttachmentModel->custom_update(
+            ['id' => $attachment_id, 'is_deleted' => 0],
+            ['is_deleted' => 1, 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+        );
+
+        $response = $this->respond(['status' => 'success', 'response' => 'Attachment deleted.']);
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
+    }
+
+    // GET contract_billing_payments/download_attachment
+    public function download_attachment()
+    {
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $file_path = WRITEPATH . 'uploads/' . $this->request->getVar('file_path');
+        $file_name = $this->request->getVar('file_name');
+
+        if (!file_exists($file_path)) {
+            return $this->failNotFound('File not found.');
+        }
+
+        return $this->response->download($file_path, null)->setFileName($file_name);
     }
 }
