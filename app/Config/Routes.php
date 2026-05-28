@@ -36,6 +36,7 @@ $routes->post('drivers/delete', 'Drivers::delete');
 $routes->get('drivers/get_attachments',     'Drivers::get_attachments');
 $routes->get('drivers/download_attachment', 'Drivers::download_attachment');
 $routes->post('drivers/delete_attachment',  'Drivers::delete_attachment');
+$routes->get('drivers/get_suggestions', 'Drivers::get_suggestions');
 
 // HELPERS
 $routes->get('helpers/index',   'Helpers::index');
@@ -47,6 +48,7 @@ $routes->post('helpers/delete', 'Helpers::delete');
 $routes->get('helpers/get_attachments',     'Helpers::get_attachments');
 $routes->get('helpers/download_attachment', 'Helpers::download_attachment');
 $routes->post('helpers/delete_attachment',  'Helpers::delete_attachment');
+$routes->get('helpers/get_suggestions', 'Helpers::get_suggestions');
 
 // CUSTOMERS
 $routes->get('customers/index',   'Customers::index');
@@ -55,6 +57,8 @@ $routes->get('customers/details', 'Customers::details');
 $routes->post('customers/create', 'Customers::create');
 $routes->post('customers/update', 'Customers::update');
 $routes->post('customers/delete', 'Customers::delete');
+$routes->get('customers/get_suggestions', 'Customers::get_suggestions');
+$routes->get('customers/get_contacts',    'Customers::get_contacts');
 
 // CONTRACTS
 $routes->get('contracts/index',   'Contracts::index');
@@ -63,6 +67,8 @@ $routes->get('contracts/details', 'Contracts::details');
 $routes->post('contracts/create', 'Contracts::create');
 $routes->post('contracts/update', 'Contracts::update');
 $routes->post('contracts/delete', 'Contracts::delete');
+$routes->get('contracts/get_suggestions', 'Contracts::get_suggestions');
+$routes->get('contracts/trip_summary',    'Contracts::trip_summary');
 
 // CONTRACT ROUTES
 $routes->get('contract_routes/index',   'Contract_routes::index');
@@ -80,6 +86,8 @@ $routes->post('trips/delete',         'Trips::delete');
 $routes->get('trips/compute_billing', 'Trips::compute_billing');
 $routes->get('trips/get_contract_trip_info', 'Trips::get_contract_trip_info');
 $routes->get('trips/get_suggestions', 'Trips::get_suggestions');
+$routes->post('trucks/update_status', 'Trucks::update_status');
+$routes->post('trips/complete', 'Trips::complete');
 
 // USERS
 $routes->get('users/index',   'Users::index');

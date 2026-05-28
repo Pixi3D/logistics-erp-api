@@ -314,6 +314,38 @@ public function delete_attachment()
     return $response;
 }
 
+public function update_status()
+{
+    if (($response = $this->_api_verification('trucks', 'update_status')) !== true)
+        return $response;
+
+    $token = $this->request->getVar('token');
+    if (($response = $this->_verify_requester($token)) !== true)
+        return $response;
+
+    $truck_id = $this->request->getPost('truck_id');
+    $status   = $this->request->getPost('status');
+
+    $condition = ['id' => $truck_id, 'is_deleted' => 0];
+    $data      = [
+        'status'     => $status,
+        'updated_by' => $this->requested_by,
+        'updated_on' => date('Y-m-d H:i:s'),
+    ];
+
+    $this->db = db_connect();
+    $this->truckModel->custom_update($condition, $data);
+
+    if ($this->db->error()['code']) {
+        $response = $this->fail('Failed to update truck status.');
+    } else {
+        $response = $this->respond(['response' => 'Truck status updated.', 'status' => 'success']);
+    }
+
+    $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+    return $response;
+}
+
 public function get_suggestions()
 {
     if (($response = $this->_api_verification('trucks', 'get_suggestions')) !== true)

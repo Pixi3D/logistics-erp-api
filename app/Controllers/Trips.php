@@ -251,6 +251,12 @@ class Trips extends MYTController
             }
         }
 
+        // Set truck to dispatched
+        $this->truckModel->custom_update(
+            ['id' => $truck_id, 'is_deleted' => 0],
+            ['status' => 'dispatched', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+        );
+
         $this->db->transCommit();
         $response = $this->respond([
             'response'               => 'Trip recorded successfully.',
@@ -460,6 +466,54 @@ class Trips extends MYTController
             ],
             'status' => 'success'
         ]);
+
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
+    }
+
+    public function complete()
+    {
+        if (($response = $this->_api_verification('trips', 'complete')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $trip_id = $this->request->getVar('trip_id');
+
+        if (!$trip = $this->tripModel->get_details_by_id($trip_id)) {
+            $response = $this->failNotFound('Trip not found.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        $this->db = db_connect();
+        $this->db->transBegin();
+
+        // Mark trip as completed
+        $this->tripModel->custom_update(
+            ['id' => $trip_id, 'is_deleted' => 0],
+            ['status' => 'completed', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+        );
+
+        if ($this->db->error()['code']) {
+            $this->db->transRollback();
+            $response = $this->fail('Failed to complete trip.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        // Set truck back to active
+        if (!empty($trip['truck_id'])) {
+            $this->truckModel->custom_update(
+                ['id' => $trip['truck_id'], 'is_deleted' => 0],
+                ['status' => 'active', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+            );
+        }
+
+        $this->db->transCommit();
+        $response = $this->respond(['response' => 'Trip marked as completed.', 'status' => 'success']);
 
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
         return $response;

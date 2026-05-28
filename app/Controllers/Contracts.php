@@ -273,6 +273,102 @@ class Contracts extends MYTController
         return $response;
     }
 
+    public function trip_summary()
+    {
+        if (($response = $this->_api_verification('contracts', 'trip_summary')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $contract_id = $this->request->getVar('contract_id');
+        $database    = \Config\Database::connect();
+
+        $contract = $this->contractModel->get_details_by_id($contract_id);
+        if (!$contract) {
+            $response = $this->failNotFound('Contract not found.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        $trips = $database->query("
+            SELECT t.id,
+                   t.trip_date,
+                   cr.origin,
+                   cr.destination,
+                   t.is_excess,
+                   t.excess_charge,
+                   t.fuel_additional_charge
+            FROM trip t
+            LEFT JOIN contract_route cr
+                   ON cr.id = t.contract_route_id AND cr.is_deleted = 0
+            WHERE t.contract_id = ?
+              AND t.is_deleted  = 0
+            ORDER BY t.trip_date DESC
+        ", [$contract_id])->getResultArray();
+
+        $total_trips_used = count($trips);
+        $included_trips   = (int) ($contract['included_trips'] ?? 0);
+        $excess_trips     = max(0, $total_trips_used - $included_trips);
+
+        $response = $this->respond([
+            'data' => [
+                'included_trips'   => $included_trips,
+                'total_trips_used' => $total_trips_used,
+                'excess_trips'     => $excess_trips,
+                'trips'            => $trips,
+            ],
+            'status' => 'success',
+        ]);
+
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
+    }
+
+    public function get_suggestions()
+{
+    if (($response = $this->_api_verification('contracts', 'get_suggestions')) !== true)
+        return $response;
+
+    $token = $this->request->getVar('token');
+    if (($response = $this->_verify_requester($token)) !== true)
+        return $response;
+
+    $keyword = $this->request->getVar('keyword') ?: '';
+
+    $database = \Config\Database::connect();
+
+    $customers = $database->query("
+        SELECT DISTINCT c.customer_id AS id,
+               cu.first_name AS label
+        FROM contract c
+        JOIN customer cu ON cu.id = c.customer_id
+        WHERE c.is_deleted = 0
+          AND (cu.first_name LIKE ? OR cu.last_name LIKE ? OR cu.trade_name LIKE ?)
+        LIMIT 10
+    ", ["%$keyword%", "%$keyword%", "%$keyword%"])->getResultArray();
+
+    $contracts = $database->query("
+        SELECT id, contract_number AS label
+        FROM contract
+        WHERE is_deleted = 0
+          AND contract_number LIKE ?
+        LIMIT 10
+    ", ["%$keyword%"])->getResultArray();
+
+    $response = $this->respond([
+        'data'   => [
+            'customers' => $customers,
+            'contracts' => $contracts,
+        ],
+        'status' => 'success'
+    ]);
+
+    $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+    return $response;
+}
+
     protected function _load_essentials()
     {
         $this->contractModel       = model('App\Models\Contract');

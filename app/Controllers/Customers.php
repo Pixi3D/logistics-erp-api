@@ -332,6 +332,35 @@ class Customers extends MYTController
         return $response;
     }
 
+    public function get_suggestions()
+{
+    if (($response = $this->_api_verification('customers', 'get_suggestions')) !== true)
+        return $response;
+
+    $token = $this->request->getVar('token');
+    if (($response = $this->_verify_requester($token)) !== true)
+        return $response;
+
+    $keyword = $this->request->getVar('keyword') ?: '';
+
+    $database = \Config\Database::connect();
+
+    $customers = $database->query("
+        SELECT id, CONCAT(first_name, ' ', last_name, IFNULL(CONCAT(' — ', trade_name), '')) AS label
+        FROM customer
+        WHERE is_deleted = 0
+          AND (first_name LIKE ? OR last_name LIKE ? OR trade_name LIKE ? OR tin LIKE ?)
+        LIMIT 10
+    ", ["%$keyword%", "%$keyword%", "%$keyword%", "%$keyword%"])->getResultArray();
+
+    $response = $this->respond([
+        'data'   => ['customers' => $customers],
+        'status' => 'success'
+    ]);
+
+    $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+    return $response;
+}
     protected function _load_essentials()
     {
         $this->customerModel           = model('App\Models\Customer');

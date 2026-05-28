@@ -86,3 +86,4 @@ EOT;
         return $query ? $query->getResultArray() : false;
     }
 }
+

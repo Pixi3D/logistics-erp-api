@@ -347,6 +347,36 @@ protected $driverAttachmentModel;
         return $response;
     }
 
+    public function get_suggestions()
+{
+    if (($response = $this->_api_verification('drivers', 'get_suggestions')) !== true)
+        return $response;
+
+    $token = $this->request->getVar('token');
+    if (($response = $this->_verify_requester($token)) !== true)
+        return $response;
+
+    $keyword = $this->request->getVar('keyword') ?: '';
+
+    $database = \Config\Database::connect();
+
+    $drivers = $database->query("
+        SELECT id, CONCAT(first_name, ' ', last_name, ' — ', COALESCE(license_number, '')) AS label
+        FROM driver
+        WHERE is_deleted = 0
+          AND (first_name LIKE ? OR last_name LIKE ? OR license_number LIKE ?)
+        LIMIT 10
+    ", ["%$keyword%", "%$keyword%", "%$keyword%"])->getResultArray();
+
+    $response = $this->respond([
+        'data'   => ['drivers' => $drivers],
+        'status' => 'success'
+    ]);
+
+    $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+    return $response;
+}
+
     protected function _load_essentials()
     {
         $this->driverModel          = model('App\Models\Driver');
