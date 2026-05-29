@@ -104,6 +104,10 @@ class Helpers extends MYTController
             'emergency_contact_number'        => $this->request->getVar('emergency_contact_number')        ?: null,
             'emergency_contact_relationship'  => $this->request->getVar('emergency_contact_relationship')  ?: null,
             'emergency_contact_address'       => $this->request->getVar('emergency_contact_address')       ?: null,
+            'sss_number'                      => $this->request->getVar('sss_number')                      ?: null,
+            'pagibig_number'                  => $this->request->getVar('pagibig_number')                  ?: null,
+            'philhealth_number'               => $this->request->getVar('philhealth_number')               ?: null,
+            'tin_number'                      => $this->request->getVar('tin_number')                      ?: null,
             'status'                          => 'active',
             'added_by'                        => $this->requested_by,
             'added_on'                        => date('Y-m-d H:i:s')
