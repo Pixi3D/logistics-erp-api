@@ -84,6 +84,21 @@ EOT;
         return $query ? $query->getRowArray() : false;
     }
 
+    public function has_open_billings($contract_id)
+{
+    $database = \Config\Database::connect();
+    $sql = <<<EOT
+SELECT COUNT(*) AS open_count
+FROM contract_billing
+WHERE contract_id = ?
+  AND status = 'open_bill'
+  AND is_deleted = 0
+EOT;
+    $query = $database->query($sql, [$contract_id]);
+    $row   = $query ? $query->getRowArray() : null;
+    return $row && (int) $row['open_count'] > 0;
+}
+
     public function search($customer_id = null, $status = null, $date_from = null, $date_to = null)
     {
         $database = \Config\Database::connect();

@@ -7,6 +7,7 @@ class Contract_billing_payments extends MYTController
     protected $contractBillingPaymentModel;
     protected $contractBillingPaymentAttachmentModel;
     protected $contractBillingModel;
+    protected $contractModel;
     protected $webappResponseModel;
 
     public function __construct()
@@ -221,41 +222,62 @@ class Contract_billing_payments extends MYTController
      * Returns true on success, false on DB error.
      */
     private function _recompute_billing($billing_id)
-    {
-        $billing = $this->contractBillingModel->get_details_by_id($billing_id);
-        if (!$billing) return false;
+{
+    $billing = $this->contractBillingModel->get_details_by_id($billing_id);
+    if (!$billing) return false;
 
-        $grand_total = (float) $billing['grand_total'];
-        $amount_paid = $this->contractBillingPaymentModel->get_total_paid($billing_id);
-        $balance     = $grand_total - $amount_paid;
+    $grand_total = (float) $billing['grand_total'];
+    $amount_paid = $this->contractBillingPaymentModel->get_total_paid($billing_id);
+    $balance     = $grand_total - $amount_paid;
 
-        if ($amount_paid <= 0) {
-            $status = 'unpaid';
-        } else {
-            $status = 'paid';
-        }
+    $status = ($amount_paid <= 0) ? 'open_bill' : 'closed_bill';
 
-        $this->contractBillingModel->custom_update(
-            ['id' => $billing_id, 'is_deleted' => 0],
+    $this->contractBillingModel->custom_update(
+        ['id' => $billing_id, 'is_deleted' => 0],
+        [
+            'amount_paid' => $amount_paid,
+            'balance'     => max(0, $balance),
+            'status'      => $status,
+            'updated_by'  => $this->requested_by,
+            'updated_on'  => date('Y-m-d H:i:s'),
+        ]
+    );
+
+    if ($this->db->error()['code']) return false;
+
+    // Auto-expire contract if end_date passed and no open billings remain
+    $contract_id = $billing['contract_id'];
+    $contract    = $this->contractModel->get_details_by_id($contract_id);
+
+    if (
+        $contract
+        && $contract['status'] === 'active'
+        && !empty($contract['end_date'])
+        && $contract['end_date'] < date('Y-m-d')
+        && !$this->contractModel->has_open_billings($contract_id)
+    ) {
+        $this->contractModel->custom_update(
+            ['id' => $contract_id, 'is_deleted' => 0],
             [
-                'amount_paid' => $amount_paid,
-                'balance'     => max(0, $balance),
-                'status'      => $status,
-                'updated_by'  => $this->requested_by,
-                'updated_on'  => date('Y-m-d H:i:s'),
+                'status'     => 'expired',
+                'updated_by' => $this->requested_by,
+                'updated_on' => date('Y-m-d H:i:s'),
             ]
         );
-
-        return !$this->db->error()['code'];
     }
+
+    return !$this->db->error()['code'];
+}
+
 
     protected function _load_essentials()
-    {
-        $this->contractBillingPaymentModel           = model('App\Models\Contract_billing_payment');
-        $this->contractBillingPaymentAttachmentModel = model('App\Models\Contract_billing_payment_attachment');
-        $this->contractBillingModel                  = model('App\Models\Contract_billing');
-        $this->webappResponseModel                   = model('App\Models\Webapp_response');
-    }
+{
+    $this->contractBillingPaymentModel           = model('App\Models\Contract_billing_payment');
+    $this->contractBillingPaymentAttachmentModel = model('App\Models\Contract_billing_payment_attachment');
+    $this->contractBillingModel                  = model('App\Models\Contract_billing');
+    $this->contractModel                         = model('App\Models\Contract');
+    $this->webappResponseModel                   = model('App\Models\Webapp_response');
+}
 
 
     // GET contract_billing_payments/get_attachments

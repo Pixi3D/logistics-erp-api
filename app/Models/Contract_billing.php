@@ -14,6 +14,8 @@ class Contract_billing extends MYTModel
         'customer_id',
         'billing_period_start',
         'billing_period_end',
+        'billing_date',
+        'due_date',
         'total_trips',
         'included_trips',
         'excess_trips',
@@ -45,7 +47,7 @@ class Contract_billing extends MYTModel
         $sql = <<<EOT
 SELECT contract_billing.*,
     contract.contract_number,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    COALESCE(NULLIF(customer.trade_name, ''), CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract_billing
 LEFT JOIN contract ON contract.id = contract_billing.contract_id
 LEFT JOIN customer ON customer.id = contract_billing.customer_id
@@ -66,7 +68,7 @@ SELECT contract_billing.*,
     contract.included_trips      AS contract_included_trips,
     contract.excess_trip_charge  AS contract_excess_trip_charge,
     contract.fuel_price_per_liter,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    COALESCE(NULLIF(customer.trade_name, ''), CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract_billing
 LEFT JOIN contract ON contract.id = contract_billing.contract_id
 LEFT JOIN customer ON customer.id = contract_billing.customer_id
@@ -83,7 +85,7 @@ EOT;
         $sql = <<<EOT
 SELECT contract_billing.*,
     contract.contract_number,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    COALESCE(NULLIF(customer.trade_name, ''), CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract_billing
 LEFT JOIN contract ON contract.id = contract_billing.contract_id
 LEFT JOIN customer ON customer.id = contract_billing.customer_id
@@ -101,7 +103,7 @@ EOT;
         $sql = <<<EOT
 SELECT contract_billing.*,
     contract.contract_number,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    COALESCE(NULLIF(customer.trade_name, ''), CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract_billing
 LEFT JOIN contract ON contract.id = contract_billing.contract_id
 LEFT JOIN customer ON customer.id = contract_billing.customer_id

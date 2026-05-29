@@ -174,8 +174,10 @@ class Contract_billings extends MYTController
             'grand_total'         => $grand_total,
             'amount_paid'         => 0,
             'balance'             => $grand_total,
-            'status'              => 'unpaid',
+            'status'              => 'open_bill',
             'remarks'             => $remarks,
+            'billing_date'        => $this->request->getVar('billing_date') ?: date('Y-m-d'),
+            'due_date'            => $this->request->getVar('due_date') ?: null,
             'added_by'            => $this->requested_by,
             'added_on'            => date('Y-m-d H:i:s'),
         ];
