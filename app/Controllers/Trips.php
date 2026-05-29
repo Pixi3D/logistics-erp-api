@@ -384,15 +384,15 @@ class Trips extends MYTController
         }
 
         $data = [
-            'contract_route_id'      => $contract_route_id,
-            'truck_id'               => $truck_id,
+            'contract_route_id'           => $contract_route_id,
+            'truck_id'                    => $truck_id,
             'expected_departure_datetime' => $expected_departure_datetime,
             'expected_arrival_datetime'   => $expected_arrival_datetime,
-            'actual_fuel_price'      => $actual_fuel_price,
-            'fuel_additional_charge' => $fuel_additional_charge,
-            'remarks'                => $this->request->getVar('remarks') ?: null,
-            'updated_by'             => $this->requested_by,
-            'updated_on'             => date('Y-m-d H:i:s')
+            'actual_fuel_price'           => $actual_fuel_price,
+            'fuel_additional_charge'      => $fuel_additional_charge,
+            'remarks'                     => $this->request->getVar('remarks') ?: null,
+            'updated_by'                  => $this->requested_by,
+            'updated_on'                  => date('Y-m-d H:i:s')
         ];
 
         $this->db = db_connect();
