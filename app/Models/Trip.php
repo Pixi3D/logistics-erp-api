@@ -204,22 +204,22 @@ public function search_suggestions($keyword)
     $like     = '%' . $keyword . '%';
 
     $customers = $database->query("
-        SELECT id, CONCAT(first_name, ' ', last_name) AS label
+        SELECT id, trade_name AS label
         FROM customer
-        WHERE (first_name LIKE ? OR last_name LIKE ? OR CONCAT(first_name, ' ', last_name) LIKE ?)
+        WHERE (trade_name LIKE ? OR first_name LIKE ? OR last_name LIKE ?)
           AND is_deleted = 0
         LIMIT 5
     ", [$like, $like, $like])->getResultArray();
 
     $contracts = $database->query("
         SELECT contract.id, 
-               CONCAT('#', contract.contract_number, ' — ', CONCAT(customer.first_name, ' ', customer.last_name)) AS label
+               CONCAT('#', contract.contract_number, ' — ', customer.trade_name) AS label
         FROM contract
         LEFT JOIN customer ON customer.id = contract.customer_id
-        WHERE (contract.contract_number LIKE ? OR customer.first_name LIKE ? OR customer.last_name LIKE ?)
+        WHERE (contract.contract_number LIKE ? OR customer.trade_name LIKE ?)
           AND contract.is_deleted = 0
         LIMIT 5
-    ", [$like, $like, $like])->getResultArray();
+    ", [$like, $like])->getResultArray();
 
     $trucks = $database->query("
         SELECT id, CONCAT(plate_number, ' — ', IFNULL(unit_code, '')) AS label
