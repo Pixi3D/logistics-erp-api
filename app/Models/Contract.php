@@ -40,7 +40,7 @@ class Contract extends MYTModel
         $database = \Config\Database::connect();
         $sql = <<<EOT
     SELECT contract.*,
-        CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
+        IFNULL(customer.trade_name, CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name,
         CONCAT(cc.first_name, ' ', cc.last_name) AS authorized_signatory,
         CASE
             WHEN contract.status = 'terminated' THEN 'terminated'
@@ -68,7 +68,7 @@ class Contract extends MYTModel
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT contract.*,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    IFNULL(customer.trade_name, CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract
 LEFT JOIN customer ON customer.id = contract.customer_id
 WHERE contract.id = ?
@@ -78,12 +78,12 @@ EOT;
         return $query ? $query->getRowArray() : false;
     }
 
-    public function search($customer_id = null, $status = null)
+    public function search($customer_id = null, $status = null, $date_from = null, $date_to = null)
     {
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT contract.*,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    IFNULL(customer.trade_name, CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract
 LEFT JOIN customer ON customer.id = contract.customer_id
 WHERE contract.is_deleted = 0
@@ -104,6 +104,16 @@ EOT;
         } elseif ($status) {
             $sql    .= " AND contract.status = ?";
             $binds[] = $status;
+        }
+
+        if ($date_from) {
+            $sql    .= " AND contract.start_date >= ?";
+            $binds[] = $date_from;
+        }
+
+        if ($date_to) {
+            $sql    .= " AND contract.start_date <= ?";
+            $binds[] = $date_to;
         }
 
         $sql .= " ORDER BY contract.added_on DESC";
