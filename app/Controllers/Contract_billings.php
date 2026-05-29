@@ -212,7 +212,7 @@ class Contract_billings extends MYTController
                     'trip_id'                => $trip['id'],
                     'contract_route_id'      => $trip['contract_route_id'] ?? 0,
                     'truck_id'               => $trip['truck_id']          ?? 0,
-                    'trip_date'              => $trip['trip_date'],
+                    'trip_date'              => $trip['trip_date'] ?? null,
                     'is_excess'              => $trip['is_excess']         ?? 0,
                     'excess_charge'          => $trip['excess_charge']     ?? 0,
                     'actual_fuel_price'      => $trip['actual_fuel_price'] ?? 0,

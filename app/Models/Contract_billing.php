@@ -148,7 +148,7 @@ SELECT
     trip.id,
     trip.contract_route_id,
     trip.truck_id,
-    trip.trip_date,
+    trip.expected_departure_datetime AS trip_date,
     trip.is_excess,
     trip.excess_charge,
     trip.actual_fuel_price,
@@ -162,10 +162,10 @@ FROM trip
 LEFT JOIN contract_route ON contract_route.id = trip.contract_route_id
 LEFT JOIN truck          ON truck.id          = trip.truck_id
 WHERE trip.contract_id = ?
-  AND trip.trip_date  >= ?
-  AND trip.trip_date  <= ?
+  AND trip.expected_departure_datetime >= ?
+  AND trip.expected_departure_datetime <= ?
   AND trip.is_deleted  = 0
-ORDER BY trip.trip_date ASC
+ORDER BY trip.expected_departure_datetime ASC
 EOT;
         $query = $database->query($sql, [$contract_id, $month_start, $month_end]);
         return $query ? $query->getResultArray() : false;
