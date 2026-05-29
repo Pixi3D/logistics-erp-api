@@ -294,9 +294,10 @@ class Contracts extends MYTController
             return $response;
         }
 
+        // UPDATED: Replaced t.trip_date with a COALESCE fallback aliased back to trip_date
         $trips = $database->query("
             SELECT t.id,
-                   t.trip_date,
+                   COALESCE(t.actual_departure_datetime, t.expected_departure_datetime, t.expected_arrival_datetime) AS trip_date,
                    cr.origin,
                    cr.destination,
                    t.is_excess,
@@ -307,7 +308,7 @@ class Contracts extends MYTController
                    ON cr.id = t.contract_route_id AND cr.is_deleted = 0
             WHERE t.contract_id = ?
               AND t.is_deleted  = 0
-            ORDER BY t.trip_date DESC
+            ORDER BY trip_date DESC
         ", [$contract_id])->getResultArray();
 
         $total_trips_used = count($trips);
