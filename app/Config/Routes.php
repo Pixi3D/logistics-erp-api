@@ -88,6 +88,8 @@ $routes->get('trips/get_contract_trip_info', 'Trips::get_contract_trip_info');
 $routes->get('trips/get_suggestions', 'Trips::get_suggestions');
 $routes->post('trucks/update_status', 'Trucks::update_status');
 $routes->post('trips/complete', 'Trips::complete');
+$routes->get('trips/get_available_assets', 'Trips::get_available_assets');
+$routes->post('trips/start', 'Trips::start');
 
 // USERS
 $routes->get('users/index',   'Users::index');

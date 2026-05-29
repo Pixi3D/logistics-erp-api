@@ -6,16 +6,20 @@ class Trip extends MYTModel
 {
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
-    protected $allowedFields    = [
+    protected $allowedFields = [
         'contract_id',
         'contract_route_id',
         'truck_id',
-        'trip_date',
+        'expected_departure_datetime',
+        'expected_arrival_datetime',
+        'actual_departure_datetime',
+        'actual_arrival_datetime',
         'is_excess',
         'excess_charge',
         'actual_fuel_price',
         'fuel_additional_charge',
         'remarks',
+        'status',
         'added_by',
         'added_on',
         'updated_by',
@@ -35,6 +39,7 @@ class Trip extends MYTModel
         $sql = <<<EOT
 SELECT trip.*,
     contract.contract_number,
+    customer.trade_name                                 AS trade_name,
     CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
     contract_route.origin                               AS route_origin,
     contract_route.destination                          AS route_destination,
@@ -58,7 +63,7 @@ LEFT JOIN customer        ON customer.id        = contract.customer_id
 LEFT JOIN contract_route  ON contract_route.id  = trip.contract_route_id
 LEFT JOIN truck           ON truck.id           = trip.truck_id
 WHERE trip.is_deleted = 0
-ORDER BY trip.trip_date DESC
+ORDER BY trip.expected_departure_datetime DESC
 EOT;
         $query = $database->query($sql);
         return $query ? $query->getResultArray() : false;
@@ -73,6 +78,7 @@ SELECT trip.*,
     contract.fuel_price_per_liter                       AS agreed_fuel_price,
     contract.included_trips,
     contract.excess_trip_charge,
+    customer.trade_name                                 AS trade_name,
     CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
     contract_route.origin                               AS route_origin,
     contract_route.destination                          AS route_destination,
@@ -98,6 +104,7 @@ EOT;
         $sql = <<<EOT
 SELECT trip.*,
     contract.contract_number,
+    customer.trade_name                                 AS trade_name,
     CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
     contract_route.origin                               AS route_origin,
     contract_route.destination                          AS route_destination,
@@ -159,16 +166,16 @@ EOT;
         }
 
         if (!empty($filters['date_from'])) {
-            $sql    .= " AND trip.trip_date >= ?";
+            $sql    .= " AND trip.expected_departure_datetime >= ?";
             $binds[] = $filters['date_from'];
         }
 
         if (!empty($filters['date_to'])) {
-            $sql    .= " AND trip.trip_date <= ?";
+            $sql    .= " AND trip.expected_departure_datetime <= ?";
             $binds[] = $filters['date_to'];
         }
 
-        $sql .= " GROUP BY trip.id ORDER BY trip.trip_date DESC";
+        $sql .= " GROUP BY trip.id ORDER BY trip.expected_departure_datetime DESC";
 
         $query = $database->query($sql, $binds);
         return $query ? $query->getResultArray() : false;
@@ -181,8 +188,8 @@ EOT;
 SELECT COUNT(*) AS trip_count
 FROM trip
 WHERE trip.contract_id = ?
-  AND trip.trip_date >= ?
-  AND trip.trip_date <= ?
+  AND trip.expected_departure_datetime >= ?
+  AND trip.expected_departure_datetime <= ?
   AND trip.is_deleted = 0
 EOT;
         $query = $database->query($sql, [$contract_id, $month_start, $month_end]);
@@ -255,5 +262,65 @@ public function search_suggestions($keyword)
         'helpers'   => $helpers,
         'routes'    => $routes,
     ];
+}
+
+public function check_asset_conflict($asset_type, $asset_id, $departure, $arrival, $exclude_trip_id = null)
+{
+    $database = \Config\Database::connect();
+
+    if ($asset_type === 'truck') {
+        $sql = <<<EOT
+SELECT COUNT(*) AS conflict_count
+FROM trip
+WHERE trip.truck_id = ?
+  AND trip.status IN ('scheduled', 'in_transit')
+  AND trip.is_deleted = 0
+  AND (
+    ? < trip.expected_arrival_datetime
+    AND ? > trip.expected_departure_datetime
+  )
+EOT;
+        $binds = [$asset_id, $departure, $arrival];
+    } elseif ($asset_type === 'driver') {
+        $sql = <<<EOT
+SELECT COUNT(*) AS conflict_count
+FROM trip
+JOIN trip_driver ON trip_driver.trip_id = trip.id AND trip_driver.is_deleted = 0
+WHERE trip_driver.driver_id = ?
+  AND trip.status IN ('scheduled', 'in_transit')
+  AND trip.is_deleted = 0
+  AND (
+    ? < trip.expected_arrival_datetime
+    AND ? > trip.expected_departure_datetime
+  )
+EOT;
+        $binds = [$asset_id, $departure, $arrival];
+    } elseif ($asset_type === 'helper') {
+        $sql = <<<EOT
+SELECT COUNT(*) AS conflict_count
+FROM trip
+JOIN trip_helper ON trip_helper.trip_id = trip.id AND trip_helper.is_deleted = 0
+WHERE trip_helper.helper_id = ?
+  AND trip.status IN ('scheduled', 'in_transit')
+  AND trip.is_deleted = 0
+  AND (
+    ? < trip.expected_arrival_datetime
+    AND ? > trip.expected_departure_datetime
+  )
+EOT;
+        $binds = [$asset_id, $departure, $arrival];
+    } else {
+        return 0;
+    }
+
+    if ($exclude_trip_id) {
+        $sql    .= " AND trip.id != ?";
+        $binds[] = $exclude_trip_id;
+    }
+
+    $query = $database->query($sql, $binds);
+    if (!$query) return 0;
+    $row = $query->getRowArray();
+    return (int) $row['conflict_count'];
 }
 }

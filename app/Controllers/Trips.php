@@ -10,6 +10,8 @@ class Trips extends MYTController
     protected $contractModel;
     protected $contractRouteModel;
     protected $truckModel;
+    protected $driverModel;
+    protected $helperModel;
     protected $webappResponseModel;
 
     public function __construct()
@@ -151,7 +153,9 @@ class Trips extends MYTController
         $contract_id       = $this->request->getVar('contract_id');
         $contract_route_id = $this->request->getVar('contract_route_id');
         $truck_id          = $this->request->getVar('truck_id');
-        $trip_date         = $this->request->getVar('trip_date');
+        $expected_departure_datetime = $this->request->getVar('expected_departure_datetime');
+        $estimated_hours             = (float) ($this->request->getVar('estimated_hours') ?? 8);
+        $expected_arrival_datetime   = date('Y-m-d H:i:s', strtotime($expected_departure_datetime . ' +' . $estimated_hours . ' hours'));
         $driver_id         = $this->request->getVar('driver_id');
         $helper_id         = $this->request->getVar('helper_id') ?: null;
         $actual_fuel_price = (float) ($this->request->getVar('actual_fuel_price') ?? 0);
@@ -180,9 +184,30 @@ class Trips extends MYTController
             return $response;
         }
 
+        // Conflict check — truck
+        if ($this->tripModel->check_asset_conflict('truck', $truck_id, $expected_departure_datetime, $expected_arrival_datetime) > 0) {
+            $response = $this->fail('Truck is already assigned to an overlapping trip during this time window.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        // Conflict check — driver
+        if ($this->tripModel->check_asset_conflict('driver', $driver_id, $expected_departure_datetime, $expected_arrival_datetime) > 0) {
+            $response = $this->fail('Driver is already assigned to an overlapping trip during this time window.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        // Conflict check — helper (optional)
+        if ($helper_id && $this->tripModel->check_asset_conflict('helper', $helper_id, $expected_departure_datetime, $expected_arrival_datetime) > 0) {
+            $response = $this->fail('Helper is already assigned to an overlapping trip during this time window.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
         // Excess trip computation
-        $month_start      = date('Y-m-01', strtotime($trip_date));
-        $month_end        = date('Y-m-t',  strtotime($trip_date));
+        $month_start      = date('Y-m-01', strtotime($expected_departure_datetime));
+        $month_end        = date('Y-m-t',  strtotime($expected_departure_datetime));
         $trips_this_month = $this->tripModel->count_trips_by_contract_and_month($contract_id, $month_start, $month_end);
         $included_trips   = (int) $contract['included_trips'];
         $is_excess        = ($trips_this_month >= $included_trips) ? 1 : 0;
@@ -203,7 +228,9 @@ class Trips extends MYTController
             'contract_id'            => $contract_id,
             'contract_route_id'      => $contract_route_id,
             'truck_id'               => $truck_id,
-            'trip_date'              => $trip_date,
+            'expected_departure_datetime' => $expected_departure_datetime,
+            'expected_arrival_datetime'   => $expected_arrival_datetime,
+            'status'                      => 'scheduled',
             'is_excess'              => $is_excess,
             'excess_charge'          => $excess_charge,
             'actual_fuel_price'      => $actual_fuel_price,
@@ -257,6 +284,20 @@ class Trips extends MYTController
             ['status' => 'dispatched', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
         );
 
+        // Set driver to dispatched
+        $this->driverModel->custom_update(
+            ['id' => $driver_id, 'is_deleted' => 0],
+            ['status' => 'dispatched', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+        );
+
+        // Set helper to dispatched (optional)
+        if ($helper_id) {
+            $this->helperModel->custom_update(
+                ['id' => $helper_id, 'is_deleted' => 0],
+                ['status' => 'dispatched', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+            );
+        }
+
         $this->db->transCommit();
         $response = $this->respond([
             'response'               => 'Trip recorded successfully.',
@@ -285,7 +326,9 @@ class Trips extends MYTController
         $actual_fuel_price = (float) ($this->request->getVar('actual_fuel_price') ?? 0);
         $contract_route_id = $this->request->getVar('contract_route_id');
         $truck_id          = $this->request->getVar('truck_id');
-        $trip_date         = $this->request->getVar('trip_date');
+        $expected_departure_datetime = $this->request->getVar('expected_departure_datetime');
+        $estimated_hours             = (float) ($this->request->getVar('estimated_hours') ?? 8);
+        $expected_arrival_datetime   = date('Y-m-d H:i:s', strtotime($expected_departure_datetime . ' +' . $estimated_hours . ' hours'));
 
         if (!$driver_id) {
             $response = $this->fail('Driver is required.');
@@ -311,6 +354,24 @@ class Trips extends MYTController
             return $response;
         }
 
+        if ($this->tripModel->check_asset_conflict('truck', $truck_id, $expected_departure_datetime, $expected_arrival_datetime, $trip_id) > 0) {
+            $response = $this->fail('Truck is already assigned to an overlapping trip during this time window.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        if ($this->tripModel->check_asset_conflict('driver', $driver_id, $expected_departure_datetime, $expected_arrival_datetime, $trip_id) > 0) {
+            $response = $this->fail('Driver is already assigned to an overlapping trip during this time window.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        if ($helper_id && $this->tripModel->check_asset_conflict('helper', $helper_id, $expected_departure_datetime, $expected_arrival_datetime, $trip_id) > 0) {
+            $response = $this->fail('Helper is already assigned to an overlapping trip during this time window.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
         // Recompute fuel additional charge
         $agreed_fuel_price      = (float) $trip['agreed_fuel_price'];
         $distance_km            = (float) $route['distance_km'];
@@ -325,7 +386,8 @@ class Trips extends MYTController
         $data = [
             'contract_route_id'      => $contract_route_id,
             'truck_id'               => $truck_id,
-            'trip_date'              => $trip_date,
+            'expected_departure_datetime' => $expected_departure_datetime,
+            'expected_arrival_datetime'   => $expected_arrival_datetime,
             'actual_fuel_price'      => $actual_fuel_price,
             'fuel_additional_charge' => $fuel_additional_charge,
             'remarks'                => $this->request->getVar('remarks') ?: null,
@@ -512,8 +574,107 @@ class Trips extends MYTController
             );
         }
 
+        $driver = $this->tripDriverModel->get_by_trip_id($trip_id);
+        if (!empty($driver[0]['driver_id'])) {
+            $this->driverModel->custom_update(
+                ['id' => $driver[0]['driver_id'], 'is_deleted' => 0],
+                ['status' => 'active', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+            );
+        }
+
+        $helper = $this->tripHelperModel->get_by_trip_id($trip_id);
+        if (!empty($helper[0]['helper_id'])) {
+            $this->helperModel->custom_update(
+                ['id' => $helper[0]['helper_id'], 'is_deleted' => 0],
+                ['status' => 'active', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+            );
+        }
+
+        // Also record actual_arrival_datetime
+        $this->tripModel->custom_update(
+            ['id' => $trip_id, 'is_deleted' => 0],
+            ['actual_arrival_datetime' => date('Y-m-d H:i:s'), 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+        );
+
         $this->db->transCommit();
         $response = $this->respond(['response' => 'Trip marked as completed.', 'status' => 'success']);
+
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
+    }
+
+    public function start()
+    {
+        if (($response = $this->_api_verification('trips', 'start')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $trip_id = $this->request->getVar('trip_id');
+
+        if (!$trip = $this->tripModel->get_details_by_id($trip_id)) {
+            $response = $this->failNotFound('Trip not found.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        if ($trip['status'] !== 'scheduled') {
+            $response = $this->fail('Only scheduled trips can be started.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        $this->db = db_connect();
+        $this->db->transBegin();
+
+        // Mark trip as in_transit and record actual departure
+        $this->tripModel->custom_update(
+            ['id' => $trip_id, 'is_deleted' => 0],
+            [
+                'status'                   => 'in_transit',
+                'actual_departure_datetime' => date('Y-m-d H:i:s'),
+                'updated_by'               => $this->requested_by,
+                'updated_on'               => date('Y-m-d H:i:s')
+            ]
+        );
+
+        if ($this->db->error()['code']) {
+            $this->db->transRollback();
+            $response = $this->fail('Failed to start trip.');
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
+        // Set truck to dispatched
+        if (!empty($trip['truck_id'])) {
+            $this->truckModel->custom_update(
+                ['id' => $trip['truck_id'], 'is_deleted' => 0],
+                ['status' => 'dispatched', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+            );
+        }
+
+        // Set driver to dispatched
+        $driver = $this->tripDriverModel->get_by_trip_id($trip_id);
+        if (!empty($driver[0]['driver_id'])) {
+            $this->driverModel->custom_update(
+                ['id' => $driver[0]['driver_id'], 'is_deleted' => 0],
+                ['status' => 'dispatched', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+            );
+        }
+
+        // Set helper to dispatched
+        $helper = $this->tripHelperModel->get_by_trip_id($trip_id);
+        if (!empty($helper[0]['helper_id'])) {
+            $this->helperModel->custom_update(
+                ['id' => $helper[0]['helper_id'], 'is_deleted' => 0],
+                ['status' => 'dispatched', 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')]
+            );
+        }
+
+        $this->db->transCommit();
+        $response = $this->respond(['response' => 'Trip started.', 'status' => 'success']);
 
         $this->webappResponseModel->record_response($this->webapp_log_id, $response);
         return $response;
@@ -543,6 +704,59 @@ class Trips extends MYTController
         return $response;
     }
 
+    public function get_available_assets()
+        {
+            if (($response = $this->_api_verification('trips', 'get_available_assets')) !== true)
+                return $response;
+
+            $token = $this->request->getVar('token');
+            if (($response = $this->_verify_requester($token)) !== true)
+                return $response;
+
+            $departure       = $this->request->getVar('expected_departure_datetime');
+            $estimated_hours = (float) ($this->request->getVar('estimated_hours') ?? 8);
+            $exclude_trip_id = $this->request->getVar('exclude_trip_id') ?: null;
+
+            if (!$departure) {
+                $response = $this->fail('expected_departure_datetime is required.');
+                $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+                return $response;
+            }
+
+            $arrival = date('Y-m-d H:i:s', strtotime($departure . ' +' . $estimated_hours . ' hours'));
+
+            $trucks  = $this->truckModel->get_all()  ?: [];
+            $drivers = $this->driverModel->get_all() ?: [];
+            $helpers = $this->helperModel->get_all() ?: [];
+
+            $truck_list = array_map(function($t) use ($departure, $arrival, $exclude_trip_id) {
+                $conflict = $this->tripModel->check_asset_conflict('truck', $t['id'], $departure, $arrival, $exclude_trip_id);
+                return array_merge($t, ['is_available' => $conflict === 0]);
+            }, $trucks);
+
+            $driver_list = array_map(function($d) use ($departure, $arrival, $exclude_trip_id) {
+                $conflict = $this->tripModel->check_asset_conflict('driver', $d['id'], $departure, $arrival, $exclude_trip_id);
+                return array_merge($d, ['is_available' => $conflict === 0]);
+            }, $drivers);
+
+            $helper_list = array_map(function($h) use ($departure, $arrival, $exclude_trip_id) {
+                $conflict = $this->tripModel->check_asset_conflict('helper', $h['id'], $departure, $arrival, $exclude_trip_id);
+                return array_merge($h, ['is_available' => $conflict === 0]);
+            }, $helpers);
+
+            $response = $this->respond([
+                'data'   => [
+                    'trucks'  => $truck_list,
+                    'drivers' => $driver_list,
+                    'helpers' => $helper_list,
+                ],
+                'status' => 'success'
+            ]);
+
+            $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+            return $response;
+        }
+
     protected function _load_essentials()
     {
         $this->tripModel           = model('App\Models\Trip');
@@ -551,6 +765,8 @@ class Trips extends MYTController
         $this->contractModel       = model('App\Models\Contract');
         $this->contractRouteModel  = model('App\Models\Contract_route');
         $this->truckModel          = model('App\Models\Truck');
+        $this->driverModel = model('App\Models\Driver');
+        $this->helperModel = model('App\Models\Helper');
         $this->webappResponseModel = model('App\Models\Webapp_response');
     }
 }
