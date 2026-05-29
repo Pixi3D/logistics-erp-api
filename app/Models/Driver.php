@@ -27,6 +27,10 @@ class Driver extends MYTModel
         'emergency_contact_address',
         'license_number',
         'license_expiry',
+        'sss_number',         
+        'pagibig_number',     
+        'philhealth_number',
+        'tin_number',    
         'status',
         'added_by',
         'added_on',
@@ -34,7 +38,6 @@ class Driver extends MYTModel
         'updated_on',
         'is_deleted'
     ];
-
     public function __construct()
 {
     parent::__construct();
