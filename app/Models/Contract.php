@@ -53,8 +53,14 @@ class Contract extends MYTModel
         SELECT customer_id, first_name, last_name
         FROM customer_contact
         WHERE role = 'Authorized Signatory'
-        AND is_deleted = 0
-        ORDER BY added_on DESC
+          AND is_deleted = 0
+          AND id IN (
+              SELECT MAX(id)
+              FROM customer_contact
+              WHERE role = 'Authorized Signatory'
+                AND is_deleted = 0
+              GROUP BY customer_id
+          )
     ) cc ON cc.customer_id = customer.id
     WHERE contract.is_deleted = 0
     ORDER BY contract.added_on DESC
