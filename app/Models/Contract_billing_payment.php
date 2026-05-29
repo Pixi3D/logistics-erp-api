@@ -42,7 +42,7 @@ SELECT contract_billing_payment.*,
     contract_billing.billing_number,
     contract_billing.grand_total,
     contract.contract_number,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    COALESCE(NULLIF(customer.trade_name, ''), CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract_billing_payment
 LEFT JOIN contract_billing ON contract_billing.id       = contract_billing_payment.billing_id
 LEFT JOIN contract         ON contract.id               = contract_billing.contract_id
@@ -62,7 +62,7 @@ SELECT contract_billing_payment.*,
     contract_billing.billing_number,
     contract_billing.grand_total,
     contract.contract_number,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    COALESCE(NULLIF(customer.trade_name, ''), CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract_billing_payment
 LEFT JOIN contract_billing ON contract_billing.id = contract_billing_payment.billing_id
 LEFT JOIN contract         ON contract.id         = contract_billing.contract_id
@@ -111,7 +111,7 @@ SELECT contract_billing_payment.*,
     contract_billing.billing_number,
     contract_billing.grand_total,
     contract.contract_number,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    COALESCE(NULLIF(customer.trade_name, ''), CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract_billing_payment
 LEFT JOIN contract_billing ON contract_billing.id = contract_billing_payment.billing_id
 LEFT JOIN contract         ON contract.id         = contract_billing.contract_id
