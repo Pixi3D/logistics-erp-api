@@ -401,8 +401,8 @@ class Contract_billings extends MYTController
         $excess_trip_total    = 0;
         $fuel_surcharge_total = 0;
 
-        $mapped = array_map(function ($trip, $i) use ($included_trips, $excess_trip_charge, &$excess_trip_total, &$fuel_surcharge_total) {
-            $is_excess              = $i >= $included_trips;
+        $mapped = array_map(function ($trip) use (&$excess_trip_total, &$fuel_surcharge_total) {
+            $is_excess              = (bool) $trip['is_excess'];
             $excess_charge          = $is_excess ? (float) $trip['excess_charge'] : 0;
             $fuel_additional_charge = (float) $trip['fuel_additional_charge'];
             $excess_trip_total    += $excess_charge;
@@ -412,7 +412,7 @@ class Contract_billings extends MYTController
                 'excess_charge'          => $excess_charge,
                 'fuel_additional_charge' => $fuel_additional_charge,
             ]);
-        }, $trips, array_keys($trips));
+        }, $trips);
 
         $grand_total = $monthly_rate + $excess_trip_total + $fuel_surcharge_total;
 
