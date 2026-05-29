@@ -59,6 +59,9 @@ $routes->post('customers/update', 'Customers::update');
 $routes->post('customers/delete', 'Customers::delete');
 $routes->get('customers/get_suggestions', 'Customers::get_suggestions');
 $routes->get('customers/get_contacts',    'Customers::get_contacts');
+$routes->get('customers/get_attachments', 'Customers::get_attachments');
+$routes->get('customers/download_attachment', 'Customers::download_attachment');
+$routes->post('customers/delete_attachment', 'Customers::delete_attachment');
 
 // CONTRACTS
 $routes->get('contracts/index',   'Contracts::index');
