@@ -69,6 +69,7 @@ $routes->post('contracts/update', 'Contracts::update');
 $routes->post('contracts/delete', 'Contracts::delete');
 $routes->get('contracts/get_suggestions', 'Contracts::get_suggestions');
 $routes->get('contracts/trip_summary',    'Contracts::trip_summary');
+$routes->get('contracts/get_authorized_signatory',  'Contracts::get_authorized_signatory');
 
 // CONTRACT ROUTES
 $routes->get('contract_routes/index',   'Contract_routes::index');

@@ -343,12 +343,12 @@ class Contract_billings extends MYTController
             $billed_keys[] = $b['billing_period_start'] . '|' . $b['billing_period_end'];
         }
 
-        // Generate monthly cycles from contract start_date to today
+        // Generate monthly cycles from contract start_date to end_date
         $cycles  = [];
         $cursor  = new \DateTime(date('Y-m-01', strtotime($contract['start_date'])));
-        $today   = new \DateTime();
+        $end     = new \DateTime(date('Y-m-01', strtotime($contract['end_date'])));
 
-        while ($cursor <= $today) {
+        while ($cursor <= $end) {
             $period_start = $cursor->format('Y-m-d');
             $period_end   = $cursor->format('Y-m-t');
             $key          = $period_start . '|' . $period_end;
@@ -390,6 +390,7 @@ class Contract_billings extends MYTController
             return $response;
         }
 
+        $customer         = $this->customerModel->get_details_by_id($contract['customer_id']);
         $trips            = $this->contractBillingModel->get_trips_for_billing($contract_id, $period_start, $period_end) ?: [];
         $included_trips   = (int)   $contract['included_trips'];
         $monthly_rate     = (float) $contract['monthly_rate'];
@@ -426,6 +427,11 @@ class Contract_billings extends MYTController
                     'fuel_surcharge_total' => $fuel_surcharge_total,
                     'grand_total'          => $grand_total,
                 ],
+                'customer' => [
+                    'trade_name'    => $customer['trade_name']    ?? null,
+                    'trade_address' => $customer['trade_address'] ?? null,
+                    'tin'           => $customer['tin']           ?? null,
+                ],
             ],
             'status' => 'success',
         ]);
@@ -439,6 +445,7 @@ class Contract_billings extends MYTController
         $this->contractBillingModel        = model('App\Models\Contract_billing');
         $this->contractBillingPaymentModel = model('App\Models\Contract_billing_payment');
         $this->contractModel               = model('App\Models\Contract');
+        $this->customerModel               = model('App\Models\Customer');
         $this->webappResponseModel         = model('App\Models\Webapp_response');
     }
 }
