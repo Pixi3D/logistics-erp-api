@@ -94,6 +94,7 @@ $routes->get('users/index',   'Users::index');
 $routes->post('users/create', 'Users::create');
 $routes->post('users/update', 'Users::update');
 $routes->post('users/delete', 'Users::delete');
+$routes->get('users/get_suggestions', 'Users::get_suggestions');
 
 // TRAIL
 $routes->get('trail/index', 'Trail::index');

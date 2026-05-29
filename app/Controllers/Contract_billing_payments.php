@@ -231,10 +231,8 @@ class Contract_billing_payments extends MYTController
 
         if ($amount_paid <= 0) {
             $status = 'unpaid';
-        } elseif ($balance <= 0) {
-            $status = 'paid';
         } else {
-            $status = 'partial';
+            $status = 'paid';
         }
 
         $this->contractBillingModel->custom_update(

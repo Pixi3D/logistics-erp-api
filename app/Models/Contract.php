@@ -40,7 +40,7 @@ class Contract extends MYTModel
         $database = \Config\Database::connect();
         $sql = <<<EOT
     SELECT contract.*,
-        CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name,
+        IFNULL(customer.trade_name, CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name,
         CONCAT(cc.first_name, ' ', cc.last_name) AS authorized_signatory,
         CASE
             WHEN contract.status = 'terminated' THEN 'terminated'
@@ -53,8 +53,14 @@ class Contract extends MYTModel
         SELECT customer_id, first_name, last_name
         FROM customer_contact
         WHERE role = 'Authorized Signatory'
-        AND is_deleted = 0
-        ORDER BY added_on DESC
+          AND is_deleted = 0
+          AND id IN (
+              SELECT MAX(id)
+              FROM customer_contact
+              WHERE role = 'Authorized Signatory'
+                AND is_deleted = 0
+              GROUP BY customer_id
+          )
     ) cc ON cc.customer_id = customer.id
     WHERE contract.is_deleted = 0
     ORDER BY contract.added_on DESC
@@ -68,7 +74,7 @@ class Contract extends MYTModel
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT contract.*,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    IFNULL(customer.trade_name, CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract
 LEFT JOIN customer ON customer.id = contract.customer_id
 WHERE contract.id = ?
@@ -78,12 +84,12 @@ EOT;
         return $query ? $query->getRowArray() : false;
     }
 
-    public function search($customer_id = null, $status = null)
+    public function search($customer_id = null, $status = null, $date_from = null, $date_to = null)
     {
         $database = \Config\Database::connect();
         $sql = <<<EOT
 SELECT contract.*,
-    CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name
+    IFNULL(customer.trade_name, CONCAT(customer.first_name, ' ', customer.last_name)) AS customer_name
 FROM contract
 LEFT JOIN customer ON customer.id = contract.customer_id
 WHERE contract.is_deleted = 0
@@ -104,6 +110,16 @@ EOT;
         } elseif ($status) {
             $sql    .= " AND contract.status = ?";
             $binds[] = $status;
+        }
+
+        if ($date_from) {
+            $sql    .= " AND contract.start_date >= ?";
+            $binds[] = $date_from;
+        }
+
+        if ($date_to) {
+            $sql    .= " AND contract.start_date <= ?";
+            $binds[] = $date_to;
         }
 
         $sql .= " ORDER BY contract.added_on DESC";

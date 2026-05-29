@@ -46,8 +46,10 @@ class Contracts extends MYTController
 
         $customer_id = $this->request->getVar('customer_id') ?: null;
         $status      = $this->request->getVar('status')      ?: null;
+        $date_from   = $this->request->getVar('date_from')   ?: null;
+        $date_to     = $this->request->getVar('date_to')     ?: null;
 
-        if (!$contracts = $this->contractModel->search($customer_id, $status)) {
+        if (!$contracts = $this->contractModel->search($customer_id, $status, $date_from, $date_to)) {
             $response = $this->failNotFound('No contracts found.');
         } else {
             $response = $this->respond(['data' => $contracts, 'status' => 'success']);
@@ -341,11 +343,11 @@ class Contracts extends MYTController
 
     $customers = $database->query("
         SELECT DISTINCT c.customer_id AS id,
-               cu.first_name AS label
+               cu.trade_name AS label
         FROM contract c
         JOIN customer cu ON cu.id = c.customer_id
         WHERE c.is_deleted = 0
-          AND (cu.first_name LIKE ? OR cu.last_name LIKE ? OR cu.trade_name LIKE ?)
+          AND (cu.trade_name LIKE ? OR cu.first_name LIKE ? OR cu.last_name LIKE ?)
         LIMIT 10
     ", ["%$keyword%", "%$keyword%", "%$keyword%"])->getResultArray();
 
@@ -368,6 +370,37 @@ class Contracts extends MYTController
     $this->webappResponseModel->record_response($this->webapp_log_id, $response);
     return $response;
 }
+
+    public function get_authorized_signatory()
+    {
+        if (($response = $this->_api_verification('contracts', 'get_authorized_signatory')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $customer_id = $this->request->getVar('customer_id');
+
+        $database = \Config\Database::connect();
+        $contact = $database->query("
+            SELECT CONCAT(first_name, ' ', last_name) AS full_name
+            FROM customer_contact
+            WHERE customer_id = ?
+              AND role = 'Authorized Signatory'
+              AND is_deleted = 0
+            ORDER BY added_on DESC
+            LIMIT 1
+        ", [$customer_id])->getRowArray();
+
+        $response = $this->respond([
+            'data'   => $contact ? $contact['full_name'] : null,
+            'status' => 'success'
+        ]);
+
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
+    }
 
     protected function _load_essentials()
     {
