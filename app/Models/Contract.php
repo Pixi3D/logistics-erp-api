@@ -18,6 +18,7 @@ class Contract extends MYTModel
         'included_trips',
         'excess_trip_charge',
         'fuel_price_per_liter',
+        'km_per_liter',
         'start_date',
         'end_date',
         'status',

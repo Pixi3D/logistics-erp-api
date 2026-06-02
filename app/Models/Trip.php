@@ -76,6 +76,7 @@ EOT;
 SELECT trip.*,
     contract.contract_number,
     contract.fuel_price_per_liter                       AS agreed_fuel_price,
+    contract.km_per_liter                               AS contract_km_per_liter,
     contract.included_trips,
     contract.excess_trip_charge,
     customer.trade_name                                 AS trade_name,

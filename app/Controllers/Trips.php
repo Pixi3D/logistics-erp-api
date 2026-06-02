@@ -133,6 +133,7 @@ class Trips extends MYTController
                 'next_is_excess'     => $next_is_excess,
                 'excess_trip_charge' => $contract['excess_trip_charge'],
                 'fuel_price_per_liter' => $contract['fuel_price_per_liter'],
+                'km_per_liter'         => $contract['km_per_liter'],
             ],
             'status' => 'success'
         ]);
@@ -216,7 +217,7 @@ class Trips extends MYTController
         // Fuel additional charge computation
         $agreed_fuel_price      = (float) $contract['fuel_price_per_liter'];
         $distance_km            = (float) $route['distance_km'];
-        $km_per_liter           = (float) $truck['km_per_liter'];
+        $km_per_liter           = (float) $contract['km_per_liter'];
         $fuel_additional_charge = 0.00;
 
         if ($km_per_liter > 0 && $distance_km > 0 && $actual_fuel_price > $agreed_fuel_price) {
@@ -375,7 +376,7 @@ class Trips extends MYTController
         // Recompute fuel additional charge
         $agreed_fuel_price      = (float) $trip['agreed_fuel_price'];
         $distance_km            = (float) $route['distance_km'];
-        $km_per_liter           = (float) $truck['km_per_liter'];
+        $km_per_liter           = (float) $trip['contract_km_per_liter'];
         $fuel_additional_charge = 0.00;
 
         if ($km_per_liter > 0 && $distance_km > 0 && $actual_fuel_price > $agreed_fuel_price) {
