@@ -118,6 +118,19 @@ $routes->get('contract_billing_payments/get_attachments',    'Contract_billing_p
 $routes->post('contract_billing_payments/upload_attachment',  'Contract_billing_payments::upload_attachment');
 $routes->post('contract_billing_payments/delete_attachment',  'Contract_billing_payments::delete_attachment');
 $routes->get('contract_billing_payments/download_attachment', 'Contract_billing_payments::download_attachment');
+$routes->get('contract_billings/get_suggestions',            'Contract_billings::get_suggestions');
+$routes->get('contract_billings/get_contracts_with_unbilled','Contract_billings::get_contracts_with_unbilled');
+$routes->post('contract_billings/create_batch',              'Contract_billings::create_batch');
+
+// REPORTS
+$routes->get('reports/get_accounts_receivable', 'Reports::get_accounts_receivable');
+
+// Banks
+$routes->get('banks/get_all',  'Banks::get_all');
+$routes->get('banks/search',   'Banks::search');
+$routes->post('banks/create',  'Banks::create');
+$routes->post('banks/update',  'Banks::update');
+$routes->post('banks/delete',  'Banks::delete');
 
 // CONTRACT BILLING PAYMENTS
 $routes->get('contract_billing_payments/index',   'Contract_billing_payments::index');

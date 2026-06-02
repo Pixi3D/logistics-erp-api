@@ -121,6 +121,11 @@ EOT;
             $binds[] = $filters['contract_id'];
         }
 
+        if (!empty($filters['billing_number'])) {
+            $sql    .= " AND contract_billing.billing_number LIKE ?";
+            $binds[] = '%' . $filters['billing_number'] . '%';
+        }
+
         if (!empty($filters['status'])) {
             $sql    .= " AND contract_billing.status = ?";
             $binds[] = $filters['status'];

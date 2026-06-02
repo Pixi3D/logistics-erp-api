@@ -229,10 +229,10 @@ class Contract_billing_payments extends MYTController
         $amount_paid = $this->contractBillingPaymentModel->get_total_paid($billing_id);
         $balance     = $grand_total - $amount_paid;
 
-        if ($amount_paid <= 0) {
-            $status = 'unpaid';
+        if ($balance <= 0) {
+            $status = 'closed_bill';
         } else {
-            $status = 'paid';
+            $status = 'open_bill';
         }
 
         $this->contractBillingModel->custom_update(
