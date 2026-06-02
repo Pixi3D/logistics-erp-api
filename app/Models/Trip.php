@@ -324,4 +324,67 @@ EOT;
     $row = $query->getRowArray();
     return (int) $row['conflict_count'];
 }
+
+    public function get_attachments()
+    {
+        if (($response = $this->_api_verification('trips', 'get_attachments')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $trip_id     = $this->request->getVar('trip_id');
+        $attachments = $this->tripAttachmentModel->get_by_trip_id($trip_id);
+
+        $response = $this->respond(['data' => $attachments ?: [], 'status' => 'success']);
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
+    }
+
+    public function download_attachment()
+    {
+        $file_path = $this->request->getVar('file_path');
+        $file_name = $this->request->getVar('file_name');
+        $full_path = FCPATH . $file_path;
+
+        if (!file_exists($full_path)) {
+            return $this->failNotFound('File not found.');
+        }
+
+        $mime = mime_content_type($full_path);
+
+        return $this->response
+            ->setHeader('Content-Type', $mime)
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $file_name . '"')
+            ->setHeader('Content-Length', filesize($full_path))
+            ->setBody(file_get_contents($full_path));
+    }
+
+    public function delete_attachment()
+    {
+        if (($response = $this->_api_verification('trips', 'delete_attachment')) !== true)
+            return $response;
+
+        $token = $this->request->getVar('token');
+        if (($response = $this->_verify_requester($token)) !== true)
+            return $response;
+
+        $attachment_id = $this->request->getVar('attachment_id');
+        $condition     = ['id' => $attachment_id, 'is_deleted' => 0];
+        $data          = ['is_deleted' => 1, 'updated_by' => $this->requested_by, 'updated_on' => date('Y-m-d H:i:s')];
+
+        $this->db = db_connect();
+        $this->tripAttachmentModel->custom_update($condition, $data);
+
+        if ($this->db->error()['code']) {
+            $response = $this->fail('Failed to remove attachment.');
+        } else {
+            $response = $this->respond(['response' => 'Attachment removed.', 'status' => 'success']);
+        }
+
+        $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+        return $response;
+    }
+
 }

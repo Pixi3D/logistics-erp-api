@@ -299,6 +299,37 @@ class Trips extends MYTController
             );
         }
 
+        $files = $this->request->getFiles();
+        if (!empty($files['attachments'])) {
+            $upload_path = FCPATH . 'uploads/trips/' . $trip_id . '/';
+            if (!is_dir($upload_path)) {
+                mkdir($upload_path, 0755, true);
+            }
+            foreach ($files['attachments'] as $file) {
+                if (!$file->isValid() || $file->hasMoved()) continue;
+                $new_name    = $file->getRandomName();
+                $file->move($upload_path, $new_name);
+                $client_name = $file->getClientName();
+                $ext         = pathinfo($client_name, PATHINFO_EXTENSION);
+                
+                $display_name = 'TRIP_' . (string)$trip_id . '_Receipt.' . $ext;
+                
+                $attachment_data = [
+                    'trip_id'   => $trip_id,
+                    'file_name' => $display_name,
+                    'file_path' => 'uploads/trips/' . $trip_id . '/' . $new_name,
+                    'added_by'  => $this->requested_by,
+                    'added_on'  => date('Y-m-d H:i:s'),
+                ];
+                if (!$this->tripAttachmentModel->insert($attachment_data)) {
+                    $this->db->transRollback();
+                    $response = $this->fail('Trip created but failed to save receipt attachment.');
+                    $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+                    return $response;
+                }
+            }
+        }
+
         $this->db->transCommit();
         $response = $this->respond([
             'response'               => 'Trip recorded successfully.',
@@ -439,6 +470,36 @@ class Trips extends MYTController
                 $response = $this->fail('Unable to assign helper to trip. Please try again.');
                 $this->webappResponseModel->record_response($this->webapp_log_id, $response);
                 return $response;
+            }
+        }
+
+        $files = $this->request->getFiles();
+        if (!empty($files['attachments'])) {
+            $upload_path = FCPATH . 'uploads/trips/' . $trip_id . '/';
+            if (!is_dir($upload_path)) {
+                mkdir($upload_path, 0755, true);
+            }
+            foreach ($files['attachments'] as $file) {
+                if (!$file->isValid() || $file->hasMoved()) continue;
+                $new_name    = $file->getRandomName();
+                $file->move($upload_path, $new_name);
+                $client_name = $file->getClientName();
+                $ext         = pathinfo($client_name, PATHINFO_EXTENSION);
+                $display_name = 'TRIP_' . (string)$trip_id . '_Receipt.' . $ext;
+                
+                $attachment_data = [
+                    'trip_id'   => $trip_id,
+                    'file_name' => $display_name,
+                    'file_path' => 'uploads/trips/' . $trip_id . '/' . $new_name,
+                    'added_by'  => $this->requested_by,
+                    'added_on'  => date('Y-m-d H:i:s'),
+                ];
+                if (!$this->tripAttachmentModel->insert($attachment_data)) {
+                    $this->db->transRollback();
+                    $response = $this->fail('Trip updated but failed to save receipt file.');
+                    $this->webappResponseModel->record_response($this->webapp_log_id, $response);
+                    return $response;
+                }
             }
         }
 
@@ -763,6 +824,7 @@ class Trips extends MYTController
         $this->tripModel           = model('App\Models\Trip');
         $this->tripDriverModel     = model('App\Models\Trip_driver');
         $this->tripHelperModel     = model('App\Models\Trip_helper');
+        $this->tripAttachmentModel = model('App\Models\Trip_attachment');
         $this->contractModel       = model('App\Models\Contract');
         $this->contractRouteModel  = model('App\Models\Contract_route');
         $this->truckModel          = model('App\Models\Truck');
